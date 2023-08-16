@@ -82,7 +82,7 @@ Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
 
 #### Execute test scripts via Curl
 
-> curl --location '<LOCUST_MASTER_URL>/swarm' \
+> curl --location '<LOCUST_MASTER_URL>:8089/swarm' \
 --header 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' \
 --data 'user_count=2&spawn_rate=1&host=<HARNESS_SMP_URL>&run_time=2m&test_scenario=CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE&pipeline_url=&pipeline_execution_count=1'  
   
