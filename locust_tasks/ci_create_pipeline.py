@@ -78,7 +78,7 @@ def initiator(environment, **kwargs):
         global k8sConnId
         k8sConnId = "perf_conn_k8s_del"
         global namespace
-        namespace = 'pods'
+        namespace = 'default'
         global delegate_tag
         delegate_tag = 'perf-delegate'
         global repoUrl

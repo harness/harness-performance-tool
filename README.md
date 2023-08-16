@@ -5,6 +5,9 @@ This document outlines all the necessary details required for:
 1. Setting up a performance test tool (Locust - https://locust.io/) to generate load on Harness system
 2. Python scripts that emulate actual user scenarios via Harness apis https://apidocs.harness.io/
 
+### Quick overview
+[locust_setup_run.mov](https://drive.google.com/file/d/1oU9r0_IBOs908D0YmpRUrCzW9EqmR_hV/view)
+
 ### [Project structure](#)
 - data : contains harness username list
 - kubernetes-config : locust master and worker deployment yaml
@@ -76,6 +79,8 @@ eg: http://<ip_address>/ng/account/DbSRs-u5QgukRP_ODtvGkw/ci/orgs/default/projec
 Pick pipeline link from Harness UI Left menu > Builds > Select Project > Click Pipelines on left > Click on pipeline name
 
 Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
+
+Note : There could be some delay (~ 60seconds) before actual test execution start, due to pre-requisite data being generated
 ```
 ![](./docs/img/locust_params.png)
 
@@ -117,5 +122,4 @@ Navigate to locust server URL while tests are running to view real time metrics
 | Trigger any pipeline or webhook ‘n’ times | Find pipeline link - Open Harness left nav -> Builds -> Select project -> Click on pipelines -> Click on pipeline name -> copy pipeline url<br/><br/> eg: http://<ip_address>/ng/account/DbSRs-u5QgukRP_ODtvGkw/ci/orgs/default/projects/ScaleTestPOC/pipelines/CITest/pipeline-studio/?storeType=INLINE                                                                                                                                                                                                                       | Test scenario : TRIGGER_PIPELINE<br/> Pipeline url: <URL><br/>Pipeline execution count : 10                                                           |                                                                                                                                                                |
 | User behaviour under steady load    |               Create Organizations, projects, connectors, 200 pipeline and execute them                                                                                                                                                                                                                                                                                                                                                                   | Test scenario : CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE,<br/>CI_UPDATE_PIPELINE,CI_VIEW_EXECUTION<br/> Pipeline url: blank<br/>Pipeline execution count : 0 |                                                                                                                                                                |
 | Create and execute a CD K8s pipeline 'n' times            | Create K8s service, env, infra, connectors, pipeline and execute                                                                                                                                                                                                                                                                                                        | Test scenario : CD_PIPELINE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : n                                                            |                                                                                                                                                                |
-|                                          |                                                                                                                                                                                                                                                                                                                                                                                  |                                                                                                                                                       |                                                                                                                                                                |
-
+ 
