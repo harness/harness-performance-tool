@@ -15,7 +15,7 @@ This document outlines all the necessary details required for:
 ### [Test data setup](#)
 
 #### 1. Add new users in account for test runs
-Add users into Harness account with random password and list them in [credentials.csv](../data/on-prem/credentials.csv)
+Add users into Harness account with random password and list them in [credentials.csv](./data/on-prem/credentials.csv)
 These credentials will be used during test runs for performing authentication
 
 > eg: auto_perf_1597@mailinator.com
