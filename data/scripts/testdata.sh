@@ -5,10 +5,9 @@
 url=http://<ip>
 username=<username>
 password=<password>
-userIds=("<userId1>" "<userId2>")
+repoUserIds=("<userId1>" "<userId2>")
 repoTokens=("<token1>" "<token2>")
 repoUrl=<repoUrl>
-userCount=<count>
 organizationCount=<count>
 projectCount=<count>
 
@@ -95,8 +94,8 @@ done
  
  
 # add github repository user id as harness secret
-for index in "${!userIds[@]}"; do
-    userId="${userIds[$index]}"
+for index in "${!repoUserIds[@]}"; do
+    userId="${repoUserIds[$index]}"
     response=$(curl --location "$url/gateway/ng/api/v2/secrets?routingId=$accountId&accountIdentifier=$accountId" \
     --header "Authorization: Bearer $token" \
     --header "content-type: application/json" \
