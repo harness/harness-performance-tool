@@ -29,7 +29,7 @@ Referred in locust test scripts while creating or running harness CI/CD pipeline
 #### 4. Populate Harness data
 Add 100 organisations and 20 projects in each organisation to populate some data in Harness account
 
-Above 2, 3, 4 can be added using script [testdata.sh](../data/scripts/testdata.sh)  
+Above 2, 3, 4 can be added using script [testdata.sh](./data/scripts/testdata.sh)  
 **Imp:** Change inputs in script to valid values and execute
 
 #### 5. Add delegate in Harness account with tag : perf-delegate
@@ -46,15 +46,15 @@ Above 2, 3, 4 can be added using script [testdata.sh](../data/scripts/testdata.s
 #### Set up Locust on GCP cluster  
 1. Connect to GCP cluster
 2. Procure static IP address 
-2. Update GCP project, cluster namespace and locust master url (static ip) in [variables.sh](../variables.sh)
-3. Execute [install.sh](../install.sh) under cloned directory
+2. Update GCP project, cluster namespace and locust master url (static ip) in [variables.sh](./variables.sh)
+3. Execute [install.sh](./install.sh) under cloned directory
 > ./install.sh
 
 ### [Test Execution](#)
 
 #### Execute test scripts via locust webUI
 
-1. Navigate to http://0.0.0.0:8089/ (on local setup) or Locust master URL    
+1. Navigate to http://0.0.0.0:8089/ (on local setup) or Locust master URL:8089    
 
   
 2. Parameters
