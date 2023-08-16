@@ -1,0 +1,10 @@
+pipeline:
+  identifier: $pipelineId
+  properties:
+    ci:
+      codebase:
+        build:
+          spec:
+            branch: master
+          type: branch
+  object Object: properties.ci.codebase

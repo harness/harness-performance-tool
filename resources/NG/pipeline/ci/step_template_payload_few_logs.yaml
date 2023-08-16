@@ -1,0 +1,30 @@
+template:
+  name: $identifier
+  identifier: $identifier
+  versionLabel: $versionLabel
+  type: Step
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: {}
+  spec:
+    type: Run
+    spec:
+      connectorRef: $connectorRef
+      image: alpine
+      shell: Sh
+      command: |-
+        total_time=70
+        interval=1
+        counter=0
+
+        while [ $counter -lt $total_time ]; do
+            echo "abc"
+            sleep $interval
+            counter=$((counter + $interval))
+        done
+      resources:
+        limits:
+          memory: 10M
+          cpu: 10m
+    strategy:
+      parallelism: $parallelism

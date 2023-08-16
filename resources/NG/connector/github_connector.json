@@ -1,0 +1,32 @@
+{
+    "connector": {
+        "name": "$identifier",
+        "description": "",
+        "projectIdentifier": "$projectIdentifier",
+        "identifier": "$identifier",
+        "orgIdentifier": "$orgIdentifier",
+        "tags": {},
+        "type": "Github",
+        "spec": {
+            "executeOnDelegate": false,
+            "type": "Repo",
+            "url": "$url",
+            "authentication": {
+                "type": "Http",
+                "spec": {
+                    "type": "UsernameToken",
+                    "spec": {
+                        "username": "$username",
+                        "tokenRef": "$tokenRef"
+                    }
+                }
+            },
+            "apiAccess": {
+                "type": "Token",
+                "spec": {
+                    "tokenRef": "$tokenRef"
+                }
+            }
+        }
+    }
+}

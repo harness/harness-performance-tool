@@ -1,0 +1,7 @@
+{
+    "name": "$svcName",
+    "identifier": "$svcName",
+    "projectIdentifier": "$projectIdentifier",
+    "orgIdentifier": "$orgIdentifier",
+    "yaml": "service:\n  name: $svcName\n  identifier: $svcName\n  tags: {}\n  serviceDefinition:\n    spec:\n      manifests:\n        - manifest:\n            identifier: manifestId\n            type: K8sManifest\n            spec:\n              store:\n                type: Github\n                spec:\n                  connectorRef: $manifestConnectorRef\n                  gitFetchType: Commit\n                  paths:\n                    - /\n                  commitId: $commitId\n              skipResourceVersioning: false\n              enableDeclarativeRollback: true\n      artifacts:\n        primary:\n          primaryArtifactRef: artifactId\n          sources:\n            - spec:\n                connectorRef: $artifactConnectorRef\n                imagePath: $artifactImage\n                tag: $artifactTag\n                region: $artifactRegion\n              identifier: artifactId\n              type: Ecr\n    type: Kubernetes"
+}

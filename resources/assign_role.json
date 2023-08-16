@@ -1,0 +1,12 @@
+{
+    "roleAssignments": [
+        {
+            "resourceGroupIdentifier": "$resourceGroupIdentifier",
+            "roleIdentifier": "$roleIdentifier",
+            "principal": {
+                "identifier": "$identifier",
+                "type": "$type"
+            }
+        }
+    ]
+}

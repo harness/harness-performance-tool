@@ -1,0 +1,8 @@
+{
+  "stepPalleteModuleInfos": [
+    {
+      "module": "ci",
+      "shouldShowCommonSteps": false
+    }
+  ]
+}

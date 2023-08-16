@@ -1,0 +1,44 @@
+template:
+  name: $identifier
+  identifier: $identifier
+  versionLabel: $versionLabel
+  type: Step
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: {}
+  spec:
+    type: Run
+    spec:
+      connectorRef: $connectorRef
+      image: alpine
+      shell: Sh
+      command: |-
+        total_time=140
+        interval=1
+        counter=0
+
+        while [ $counter -lt $total_time ]; do
+          echo test1 + $counter
+          echo test2 + $counter
+          echo test3 + $counter
+          echo test4 + $counter
+          echo test5 + $counter
+          echo test6 + $counter
+          echo test7 + $counter
+          echo test8 + $counter
+          echo test9 + $counter
+          echo test10 + $counter
+          echo test11 + $counter
+          echo test12 + $counter
+          echo test13 + $counter
+          echo test14 + $counter
+          echo test15 + $counter
+          sleep $interval
+          counter=$((counter + $interval))
+        done
+      resources:
+        limits:
+          memory: 20M
+          cpu: 10m
+    strategy:
+      parallelism: $parallelism

@@ -1,0 +1,34 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "PIPELINE",
+            "resourceIdentifier": "$pipelineId",
+            "permission": "core_pipeline_delete"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "PIPELINE",
+            "resourceIdentifier": "$pipelineId",
+            "permission": "core_pipeline_execute"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "PIPELINE",
+            "resourceIdentifier": "$pipelineId",
+            "permission": "core_pipeline_edit"
+        }
+    ]
+}

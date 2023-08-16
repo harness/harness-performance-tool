@@ -1,0 +1,26 @@
+{
+  "connector": {
+    "name": "${name}",
+    "description": "",
+    "projectIdentifier": "${projectName}",
+    "orgIdentifier": "${orgName}",
+    "identifier": "${name}",
+    "tags": {},
+    "type": "K8sCluster",
+    "spec": {
+      "delegateSelectors": [],
+      "credential": {
+        "type": "ManualConfig",
+        "spec": {
+          "masterUrl": "${url}",
+          "auth": {
+            "type": "ServiceAccount",
+            "spec": {
+              "serviceAccountTokenRef": "${secretName}"
+            }
+          }
+        }
+      }
+    }
+  }
+}

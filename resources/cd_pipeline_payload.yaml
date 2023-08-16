@@ -1,0 +1,17 @@
+pipeline:
+    identifier: $pipelineIdentifier
+    stages:
+        - stage:
+              identifier: test
+              type: Deployment
+              spec:
+                  infrastructure:
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              namespace: perf-2
+                              releaseName: $releaseName
+              variables:
+                  - name: resourceNamePrefix
+                    type: String
+                    value: $releaseName

@@ -1,0 +1,18 @@
+pipeline:
+  name: $identifier
+  identifier: $identifier
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: $gitConnectorRef
+        build: <+input>
+  stages:
+    - stage:
+        name: Stage1
+        identifier: Stage1
+        template:
+          templateRef: $stageTemplateRef
+          versionLabel: $stageVersionLabel

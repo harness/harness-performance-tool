@@ -1,0 +1,9 @@
+{
+    "organization": {
+        "name": "$orgName",
+        "description": "",
+        "identifier": "$orgName",
+        "tags": {},
+        "accountIdentifier": "$accountId"
+    }
+}

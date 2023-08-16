@@ -1,0 +1,7 @@
+{
+    "name": "$envName",
+    "identifier": "$envName",
+    "orgIdentifier": "$orgIdentifier",
+    "projectIdentifier": "$projectIdentifier",
+    "type": "Production"
+}

@@ -1,0 +1,4 @@
+pyyaml
+hvac
+locust-plugins
+cryptography

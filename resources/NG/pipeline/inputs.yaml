@@ -1,0 +1,9 @@
+pipeline:
+  identifier: $pipelineId
+  properties:
+    ci:
+      codebase:
+        build:
+          spec:
+            branch: main
+          type: branch

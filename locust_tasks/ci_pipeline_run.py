@@ -1,0 +1,256 @@
+import sys
+import time
+import gevent
+import requests
+import yaml
+import base64
+from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
+from locust import task, constant_pacing, SequentialTaskSet, events
+from locust.runners import WorkerRunner
+from locust_tasks.helpers.ng import account, organization, project, resourcegroup, \
+    role, smtp, user, usergroup, gitsync, dashboard, connector, secret, pipeline, ti, log_service, \
+    service, en, infra, source_code, freeze, ci_helper, template, delegate, variable
+from locust_tasks.helpers.ng import helpers
+from locust_tasks.helpers import authentication
+from utilities.utils import getPath, CSVReader
+from utilities import utils
+import csv
+import json
+from locust.exception import StopUser
+from random import choice
+from string import ascii_lowercase
+from concurrent.futures import ThreadPoolExecutor
+
+uniqueId = None
+
+def checker(environment):
+    while not environment.runner.state in [STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP]:
+        time.sleep(1)
+        if environment.runner.stats.total.fail_ratio > 0.2:
+            print(f"fail ratio was {environment.runner.stats.total.fail_ratio}, quitting")
+            environment.runner.quit()
+            return
+
+def ci_pipeline_run(environment, msg, **kwargs):
+    # Fired when the worker receives a message of type 'ci_pipeline_run'
+    global uniqueId
+    uniqueId = msg.data
+
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+    if not isinstance(environment.runner, WorkerRunner):
+        gevent.spawn(checker, environment)
+    if not isinstance(environment.runner, MasterRunner):
+        environment.runner.register_message("ci_pipeline_run", ci_pipeline_run)
+
+@events.test_start.add_listener
+def initiator(environment, **kwargs):
+    testdata_setup = False
+    arr = utils.getTestClasses(environment)
+    for ar in arr:
+        try:
+            ar = ar.replace('_CLASS', '') if '_CLASS' in ar else ar
+            getattr(sys.modules[__name__], ar)
+            testdata_setup = True
+        except Exception:
+            pass
+
+    if testdata_setup == True:
+        global hostname
+        hostname = environment.host
+        global deployment_count_needed
+        deployment_count_needed = environment.parsed_options.pipeline_execution_count
+        global deployment_count
+        deployment_count = 0
+        env = environment.parsed_options.env
+
+        utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+
+        # pre-requisite
+        # create org, project, secret, gitConn, dockerConn, template, pipeline (non-git)
+
+        global uniqueId
+        global accountId
+        global orgId
+        global projectId
+        projectId = "perf_project"
+        global dockerConnId
+        dockerConnId = "perf_conn_docker"
+        global templateId
+        templateId = "perf_template"
+        global templateVersionId
+        templateVersionId = "version1"
+        global k8sConnId
+        k8sConnId = "perf_conn_k8s_del"
+        global namespace
+        namespace = 'pods'
+        global delegate_tag
+        delegate_tag = 'perf-delegate'
+        global repoUrl
+
+        # generate bearer token for test data setup
+        username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
+        creds = next(username_list)[0].split(':')
+        c = creds[0] + ':' + creds[1]
+        en = base64.b64encode(c.encode('ascii'))
+        base64UsernamePassword = 'Basic ' + en.decode('ascii')
+        json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
+        bearerToken = json_response['resource']['token']
+        accountId = json_response['resource']['defaultAccountId']
+
+        # executing on master to avoid running on multiple workers
+        if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
+            global uniqueId
+            uniqueId = utils.getUniqueString()
+            environment.runner.send_message("ci_pipeline_run", uniqueId)
+            print("GENERATING TEST DATA ON CI_PIPELINE_RUN WITH UNIQUE ID - " + uniqueId)
+            orgId = "auto_org_" + uniqueId
+            organization.createOrg(hostname, orgId, accountId, bearerToken)
+            project.createProject(hostname, projectId, orgId, accountId, bearerToken)
+            connector.createDockerConnectorAnonymous(hostname, accountId, orgId, projectId, dockerConnId,
+                                                         'https://index.docker.io/v2/', bearerToken)
+            create_pipeline_template(hostname, templateId, templateVersionId, accountId, orgId, projectId, dockerConnId,
+                                     bearerToken)
+            connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag, bearerToken)
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            def setup_data(index):
+                # use existing harness secret eg: user0 (repo userid) | token0 (repo user token)
+                githubConnId = "perf_conn_github_" + uniqueId + str(index)
+                connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId,
+                                                repoUrl, 'account.user'+str(index), 'account.token'+str(index), bearerToken)
+                pipelineId = "perf_pipeline_"+uniqueId+str(index)
+                create_ci_pipeline(hostname, pipelineId, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId,
+                                   templateId, templateVersionId, namespace, bearerToken)
+
+            pipeline_count = 1
+            for index in range(pipeline_count):
+                setup_data(index)
+def create_pipeline_template(hostname, identifier, versionId, accountId, orgId, projectId, connectorRef, bearerToken):
+    with open(getPath('resources/NG/pipeline/ci/step_template_payload.yaml'), 'r+') as f:
+        # Updating the Json File
+        pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+        payload = str(yaml.dump(pipelineData, default_flow_style=False))
+        f.truncate()
+    dataMap = {
+        "identifier": identifier,
+        "orgIdentifier": orgId,
+        "projectIdentifier": projectId,
+        "connectorRef": connectorRef,
+        "versionLabel": versionId,
+        "parallelism": "2"
+    }
+    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&isNewTemplate=true&storeType=INLINE"
+    response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
+    if response.status_code != 200:
+        print("Pipeline template created as part of test data failed")
+        utils.print_error_log(response)
+
+def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId, templateId, templateVersionId, namespace, bearerToken):
+    with open(getPath('resources/NG/pipeline/ci/pipeline_step1_step2_infra_payload.yaml'), 'r+') as f:
+        # Updating the Json File
+        pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+        payload = str(yaml.dump(pipelineData, default_flow_style=False))
+        f.truncate()
+    dataMap = {
+        "identifier": identifier,
+        "orgIdentifier": orgId,
+        "projectIdentifier": projectId,
+        "gitConnectorRef": githubConnId,
+        "dockerConnectorRef": dockerConnId,
+        "templateRef": templateId,
+        "versionLabel": templateVersionId,
+        "k8sConnectorRef": k8sConnId,
+        "namespace": namespace
+    }
+    url = "/pipeline/api/pipelines/v2?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&storeType=INLINE"
+    response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
+    if response.status_code != 200:
+        print("Pipeline created as part of test data failed")
+        utils.print_error_log(response)
+
+# Trigger non-git pipeline added above 'deployment_count_needed' times
+class CI_PIPELINE_RUN(SequentialTaskSet):
+    def data_initiator(self):
+        self.__class__.wait_time = constant_pacing(1 // 1)
+
+    def authentication(self):
+        creds = next(utils.userid_list)[0].split(':')
+        c = creds[0] + ":" + creds[1]
+        en = base64.b64encode(c.encode('ascii'))
+        payload = {"authorization": 'Basic ' + en.decode('ascii')}
+        headers = {'Content-Type': 'application/json'}
+        uri = '/api/users/login'
+        print("logging with :: " + creds[0])
+        response = self.client.post(uri, data=json.dumps(payload), headers=headers, name="LOGIN - " + uri)
+        if response.status_code != 200:
+            print("Login request failure..")
+            print(f"{response.request.url} {payload} {response.status_code} {response.content}")
+            print("--------------------------")
+            raise StopUser()
+        else:
+            resp = response.content
+            json_resp = json.loads(resp)
+            self.bearerToken = str(json_resp['resource']['token'])
+            self.userId = str(json_resp['resource']['uuid'])
+            self.accountId = str(json_resp['resource']['defaultAccountId'])
+
+    def on_start(self):
+        self.data_initiator()
+        self.authentication()
+
+    @task
+    def setup_data(self):
+        self.orgId = "auto_org_" + uniqueId
+        self.pipelineId = "perf_pipeline_" + uniqueId + "0"
+
+    @task
+    def executionChecker(self):
+        global deployment_count
+        if deployment_count >= deployment_count_needed:
+            print('Deployment Count Reached, hence its Perf test is gonna be stopped')
+            headers = {'Connection': 'keep-alive'}
+            stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
+            if stopResponse.status_code == 200:
+                print('Perf Test has been stopped')
+                self.interrupt()
+            else:
+                print('Alarm Perf Tests are still running')
+                print(stopResponse.content)
+
+    @task
+    def triggerPipeline(self):
+        global deployment_count
+        if deployment_count < deployment_count_needed:
+            with open(getPath('resources/NG/pipeline/inputs_codebase.yaml'), 'r+') as f:
+                # Updating the Json File
+                pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+                payload = str(yaml.dump(pipelineData, default_flow_style=False))
+                f.truncate()
+            dataMap = {
+                "pipelineId": self.pipelineId
+            }
+            if dataMap is not None:
+                for key in dataMap:
+                    if key is not None:
+                        payload = payload.replace('$' + key, dataMap[key])
+            response = helpers.triggerPipeline(self, self.pipelineId, projectId, self.orgId, "ci",
+                                               self.accountId, self.bearerToken, payload)
+
+
+            if response.status_code == 200:
+                print('Pipeline is triggered successfully ')
+                deployment_count += 1
+                if deployment_count >= deployment_count_needed:
+                    print('Deployment Count Reached, hence its Perf test is gonna be stopped')
+                    headers = {'Connection': 'keep-alive'}
+                    stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
+                    if stopResponse.status_code == 200:
+                        print('Perf Test has been stopped')
+                        self.interrupt()
+                    else:
+                        print('Alarm Perf Tests are still running')
+                        print(stopResponse.content)
+            else:
+                utils.print_error_log(response)

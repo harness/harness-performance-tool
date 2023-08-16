@@ -1,0 +1,21 @@
+pipeline:
+  identifier: $pipelineId
+  stages:
+    - stage:
+        identifier: CanaryDeploy
+        type: Deployment
+        spec:
+          service:
+            serviceInputs:
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  manifests:
+                    - manifest:
+                        identifier: manifestId
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Github
+                            spec:
+                              connectorRef: $manifestConnectorRef

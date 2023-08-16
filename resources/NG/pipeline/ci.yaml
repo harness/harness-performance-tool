@@ -1,0 +1,58 @@
+pipeline:
+  name: $pipelineId
+  identifier: $pipelineId
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: $gitConnId
+        repoName: https://github.com/keen-software/goHelloWorldServer.git
+        build: <+input>
+  stages:
+    - stage:
+        name: stage1
+        identifier: stage1
+        type: CI
+        spec:
+          cloneCodebase: true
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: $k8sConnId
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Run unit tests
+                  identifier: Run_unit_tests
+                  spec:
+                    connectorRef: $dockerIdentifier
+                    image: golang:1.15
+                    shell: Sh
+                    command: |-
+                      go get gotest.tools/gotestsum
+                      gotestsum --format=standard-verbose --junitfile unit-tests.xml || true
+                      CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo
+                    resources:
+                      limits:
+                        memory: 100Mi
+                        cpu: 100m
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: BuildAndPushDockerRegistry_1
+                  identifier: BuildAndPushDockerRegistry_1
+                  spec:
+                    connectorRef: $dockerIdentifier
+                    repo: cdngdocker/newrepo
+                    tags:
+                      - <+pipeline.sequenceId>
+                    resources:
+                      limits:
+                        memory: 100Mi
+                        cpu: 100m

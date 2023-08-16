@@ -1,0 +1,15 @@
+inputSet:
+  name: $identifier
+  identifier: $identifier
+  orgIdentifier: $orgIdentifier
+  projectIdentifier: $projectIdentifier
+  pipeline:
+    identifier: $pipelineIdentifier
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: master
+  object Object: pipeline.properties.ci.codebase

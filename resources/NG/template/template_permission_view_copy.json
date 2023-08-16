@@ -1,0 +1,22 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "TEMPLATE",
+            "permission": "core_template_view"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "TEMPLATE",
+            "permission": "core_template_copy"
+        }
+    ]
+}

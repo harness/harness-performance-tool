@@ -1,0 +1,3 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'harness-harness-automation.jfrog.io/server/nginx:1.0', '.' ]

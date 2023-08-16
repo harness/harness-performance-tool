@@ -1,0 +1,9 @@
+{
+    "filterType": "$filterType",
+    "templateEntityTypes": [
+        "$templateEntityTypes"
+    ],
+    "childTypes": [
+        "$childTypes"
+    ]
+}

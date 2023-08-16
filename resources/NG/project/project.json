@@ -1,0 +1,11 @@
+{
+    "project": {
+        "name": "$projectName",
+        "orgIdentifier": "$orgName",
+        "color": "#0063f7",
+        "description": "",
+        "identifier": "$projectName",
+        "tags": {},
+        "modules": []
+    }
+}

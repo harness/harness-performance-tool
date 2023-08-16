@@ -1,0 +1,9 @@
+pipeline:
+  name: ""
+  identifier: "-1"
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  repo: ""
+  branch: ""
+  connectorRef: ""
+  storeType: INLINE

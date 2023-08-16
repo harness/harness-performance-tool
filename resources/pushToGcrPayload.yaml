@@ -1,0 +1,22 @@
+pipeline:
+    identifier: pipelineName
+    properties:
+        ci:
+            codebase:
+                build:
+                    type: branch
+                    spec:
+                        branch: master
+    stages:
+        - stage:
+              identifier: perf
+              type: CI
+              spec:
+                  execution:
+                      steps:
+                          - step:
+                                identifier: qatargetnggcr
+                                type: BuildAndPushGCR
+                                spec:
+                                    tags:
+                                        - thala25

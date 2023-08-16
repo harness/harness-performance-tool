@@ -1,0 +1,9 @@
+pipeline:
+    identifier: $pipelineIdentifier
+    properties:
+        ci:
+            codebase:
+                build:
+                    type: branch
+                    spec:
+                        branch: master

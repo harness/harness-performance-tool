@@ -1,0 +1,6 @@
+{
+  "name": "$svcName",
+  "identifier": "$svcName",
+  "orgIdentifier": "$orgName",
+  "projectIdentifier": "$projectName"
+}

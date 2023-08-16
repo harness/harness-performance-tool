@@ -1,0 +1,298 @@
+pipeline:
+    name: $pipelineName
+    identifier: $pipelineIdentifier
+    projectIdentifier: $projectIdentifier
+    orgIdentifier: $orgName
+    tags: {}
+    stages:
+        - stage:
+              name: perf
+              identifier: perf
+              description: ""
+              type: CI
+              spec:
+                  cloneCodebase: false
+                  execution:
+                      steps:
+                          - parallel:
+                                - step:
+                                      type: Run
+                                      name: load1
+                                      identifier: load1
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load2
+                                      identifier: load2
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load3
+                                      identifier: load3
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load4
+                                      identifier: load4
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load5
+                                      identifier: load5
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load6
+                                      identifier: load6
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load7
+                                      identifier: load7
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                          - parallel:
+                                - step:
+                                      type: Run
+                                      name: load8
+                                      identifier: load8
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load9
+                                      identifier: load9
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load10
+                                      identifier: load10
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load11
+                                      identifier: load11
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load12
+                                      identifier: load12
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load13
+                                      identifier: load13
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load14
+                                      identifier: load14
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                          - parallel:
+                                - step:
+                                      type: Run
+                                      name: load15
+                                      identifier: load15
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load16
+                                      identifier: load16
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load17
+                                      identifier: load17
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load18
+                                      identifier: load18
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load19
+                                      identifier: load19
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load20
+                                      identifier: load20
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                                - step:
+                                      type: Run
+                                      name: load21
+                                      identifier: load21
+                                      spec:
+                                          connectorRef: $dockerConnectorName
+                                          image: alpine
+                                          command: echo "hai"
+                                          privileged: false
+                                          resources:
+                                            limits:
+                                              memory: 100Mi
+                                              cpu: 100m
+                  serviceDependencies: []
+                  infrastructure:
+                      type: KubernetesDirect
+                      spec:
+                          connectorRef: $k8sConnectorName
+                          namespace: default

@@ -1,0 +1,31 @@
+{
+    "connector": {
+        "name": "$awsConnectorName",
+        "description": "",
+        "projectIdentifier": "$projectName",
+        "identifier": "$awsConnectorName",
+        "orgIdentifier": "$orgName",
+        "tags": {},
+        "type": "Aws",
+        "spec": {
+            "executeOnDelegate": false,
+            "awsSdkClientBackOffStrategyOverride": {
+                "type": "EqualJitterBackoffStrategy",
+                "spec": {
+                    "baseDelay": 100,
+                    "maxBackoffTime": 1000,
+                    "retryCount": 15
+                }
+            },
+            "credential": {
+                "type": "ManualConfig",
+                "region": "$region",
+                "spec": {
+                    "accessKeyRef": "$accessKeyRef",
+                    "secretKeyRef": "$secretKeyRef"
+                },
+                "crossAccountAccess": null
+            }
+        }
+    }
+}

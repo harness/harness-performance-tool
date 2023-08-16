@@ -1,0 +1,23 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "TEMPLATE",
+            "permission": "core_template_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "PIPELINE",
+            "resourceIdentifier": "$resourceIdentifier",
+            "permission": "core_pipeline_edit"
+        }
+    ]
+}

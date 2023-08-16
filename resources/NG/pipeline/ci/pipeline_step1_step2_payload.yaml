@@ -1,0 +1,46 @@
+pipeline:
+  name: $identifier
+  identifier: $identifier
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: $gitConnectorRef
+        build: <+input>
+  stages:
+    - stage:
+        name: Stage1
+        identifier: Stage1
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Run_1
+                  identifier: Run_1
+                  strategy:
+                    parallelism: 2
+                  spec:
+                    connectorRef: $dockerConnectorRef
+                    image: alpine
+                    shell: Sh
+                    command: |-
+                      sleep 70
+                      export abc=xyz
+                    outputVariables:
+                      - name: abc
+                    resources:
+                      limits:
+                        memory: 10M
+                        cpu: 10m
+              - step:
+                  name: Run_2
+                  identifier: Run_2
+                  template:
+                    templateRef: $templateRef
+                    versionLabel: $versionLabel

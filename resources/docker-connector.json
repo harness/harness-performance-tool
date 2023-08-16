@@ -1,0 +1,23 @@
+{
+  "connector": {
+    "name": "${name}",
+    "description": "",
+    "projectIdentifier": "${projectName}",
+    "identifier": "${name}",
+    "orgIdentifier": "{orgName}",
+    "tags": {},
+    "type": "DockerRegistry",
+    "spec": {
+      "delegateSelectors": [],
+      "dockerRegistryUrl": "${dockerRegistryUrl}",
+      "providerType": "Other",
+      "auth": {
+        "type": "UsernamePassword",
+        "spec": {
+          "username": "${username}",
+          "passwordRef": "${secretName}"
+        }
+      }
+    }
+  }
+}

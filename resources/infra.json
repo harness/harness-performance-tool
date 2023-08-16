@@ -1,0 +1,7 @@
+{
+  "name": "$infraName",
+  "identifier": "$infraName",
+  "type": "$envType",
+  "orgIdentifier": "$orgName",
+  "projectIdentifier": "$projectIdentifier"
+}

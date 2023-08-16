@@ -1,0 +1,11 @@
+{
+    "name": "$usergroupId",
+    "identifier": "$usergroupId",
+    "description": "desc",
+    "tags": {
+        "foo": ""
+    },
+    "users": [
+        "$userId"
+    ]
+}

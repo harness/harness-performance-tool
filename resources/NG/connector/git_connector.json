@@ -1,0 +1,21 @@
+{
+    "connector": {
+        "name": "$connectorId",
+        "description": "",
+        "projectIdentifier": "$projectIdentifier",
+        "identifier": "$connectorId",
+        "orgIdentifier": "$orgIdentifier",
+        "tags": {},
+        "type": "Git",
+        "spec": {
+            "executeOnDelegate": false,
+            "connectionType": "Repo",
+            "url": "$gitUrl",
+            "type": "Http",
+            "spec": {
+                "username": "$username",
+                "passwordRef": "$passwordRef"
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "name": "$infraId",
+    "identifier": "$infraId",
+    "description": "",
+    "tags": {},
+    "orgIdentifier": "$orgIdentifier",
+    "projectIdentifier": "$projectIdentifier",
+    "environmentRef": "$environmentRef",
+    "deploymentType": "Kubernetes",
+    "type": "KubernetesDirect",
+    "yaml": "infrastructureDefinition:\n  name: $infraId\n  identifier: $infraId\n  description: \"\"\n  tags: {}\n  orgIdentifier: $orgIdentifier\n  projectIdentifier: $projectIdentifier\n  environmentRef: $environmentRef\n  deploymentType: Kubernetes\n  type: KubernetesDirect\n  spec:\n    connectorRef: $k8sConnId\n    namespace: $namespace\n    releaseName: release-<+INFRA_KEY>\n  allowSimultaneousDeployments: $allowSimultaneousDeployments\n"
+}

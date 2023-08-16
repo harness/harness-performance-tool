@@ -1,0 +1,86 @@
+pipeline:
+  name: $identifier
+  identifier: $identifier
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  delegateSelectors:
+    - $delegateSelector
+  tags: {}
+  stages:
+    - stage:
+        name: CanaryDeploy
+        identifier: CanaryDeploy
+        description: ""
+        type: Deployment
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: $serviceName
+            serviceInputs:
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  manifests:
+                    - manifest:
+                        identifier: manifestId
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Github
+                            spec:
+                              connectorRef: <+input>
+          environment:
+            environmentRef: $environmentName
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: $infraName
+          execution:
+            rollbackSteps: []
+            steps:
+              - step:
+                  type: K8sCanaryDeploy
+                  name: K8sCanaryDeploy_1
+                  identifier: K8sCanaryDeploy_1
+                  spec:
+                    skipDryRun: false
+                    instanceSelection:
+                      type: Count
+                      spec:
+                        count: 1
+                  timeout: 10m
+              - step:
+                  type: K8sCanaryDelete
+                  name: K8sCanaryDelete_1
+                  identifier: K8sCanaryDelete_1
+                  spec: { }
+                  timeout: 10m
+              - step:
+                  type: K8sRollingDeploy
+                  name: K8sRollingDeploy_1
+                  identifier: K8sRollingDeploy_1
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: false
+                  timeout: 10m
+              - step:
+                  type: K8sDelete
+                  name: K8sDelete_1
+                  identifier: K8sDelete_1
+                  spec:
+                    deleteResources:
+                      type: ReleaseName
+                      spec:
+                        deleteNamespace: true
+                  timeout: 10m
+        tags: {}
+        variables:
+          - name: resourceNamePrefix
+            type: String
+            description: ""
+            value: locust-resource
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback

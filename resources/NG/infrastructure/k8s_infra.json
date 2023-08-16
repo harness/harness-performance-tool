@@ -1,0 +1,12 @@
+{
+    "name": "$k8sInfra",
+    "identifier": "$k8sInfra",
+    "description": "",
+    "tags": {},
+    "orgIdentifier": "$orgIdentifier",
+    "projectIdentifier": "$projectIdentifier",
+    "environmentRef": "$environmentRef",
+    "deploymentType": "Kubernetes",
+    "type": "KubernetesDirect",
+    "yaml": "infrastructureDefinition:\n  name: $k8sInfra\n  identifier: $k8sInfra\n  description: \"\"\n  tags: {}\n  orgIdentifier: $orgIdentifier\n  projectIdentifier: $projectIdentifier\n  environmentRef: $environmentRef\n  deploymentType: Kubernetes\n  type: KubernetesDirect\n  spec:\n    connectorRef: $k8sConnectorRef\n    namespace: locust-k8s-<+<+pipeline.executionId>.toLowerCase().replace(\"_\", \"-\")>\n    releaseName: locust-sample-release\n  allowSimultaneousDeployments: true"
+}

@@ -1,0 +1,8 @@
+{
+    "stepPalleteModuleInfos": [
+        {
+            "module": "$module",
+            "shouldShowCommonSteps": false
+        }
+    ]
+}

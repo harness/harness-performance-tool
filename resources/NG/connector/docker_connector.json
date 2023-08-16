@@ -1,0 +1,25 @@
+{
+    "connector": {
+        "name": "$connectorId",
+        "description": "desc",
+        "projectIdentifier": "$projectIdentifier",
+        "identifier": "$connectorId",
+        "orgIdentifier": "$orgIdentifier",
+        "tags": {
+            "foo": ""
+        },
+        "type": "DockerRegistry",
+        "spec": {
+            "executeOnDelegate": false,
+            "dockerRegistryUrl": "$dockerRegistryUrl",
+            "providerType": "DockerHub",
+            "auth": {
+                "type": "UsernamePassword",
+                "spec": {
+                    "username": "$username",
+                    "passwordRef": "$passwordRef"
+                }
+            }
+        }
+    }
+}

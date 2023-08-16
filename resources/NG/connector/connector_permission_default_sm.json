@@ -1,0 +1,117 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "CLOUD_PROVIDER"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "ARTIFACTORY"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "CLOUD_COST"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "CODE_REPO"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "TICKETING"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "MONITORING"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceAttributes": {
+                "category": "SECRET_MANAGER"
+            },
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceIdentifier": "harnessSecretManager",
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceIdentifier": "harnessSecretManager",
+            "permission": "core_connector_delete"
+        }
+    ]
+}

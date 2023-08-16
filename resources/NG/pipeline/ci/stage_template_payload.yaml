@@ -1,0 +1,28 @@
+template:
+  name: $identifier
+  identifier: $identifier
+  versionLabel: $versionLabel
+  type: Stage
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  tags: { }
+  spec:
+    type: CI
+    spec:
+      cloneCodebase: true
+      infrastructure:
+        type: KubernetesDirect
+        spec:
+          connectorRef: $connectorRef
+          namespace: $namespace
+          automountServiceAccountToken: true
+          nodeSelector: { }
+          os: Linux
+      execution:
+        steps:
+          - step:
+              name: Run
+              identifier: Run
+              template:
+                templateRef: $stepTemplateRef
+                versionLabel: $stepVersionLabel

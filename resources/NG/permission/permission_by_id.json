@@ -1,0 +1,14 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountId",
+                "orgIdentifier": "$orgId",
+                "projectIdentifier": "$projectId"
+            },
+            "resourceType": "$resourceType",
+            "resourceIdentifier": "$resourceIdentifier",
+            "permission": "$permission"
+        }
+    ]
+}

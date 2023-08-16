@@ -1,0 +1,12 @@
+{
+    "types": [
+        "$types"
+    ],
+    "filterType": "Connector",
+    "projectIdentifier": [
+        "$projectIdentifier"
+    ],
+    "orgIdentifier": [
+        "$orgIdentifier"
+    ]
+}

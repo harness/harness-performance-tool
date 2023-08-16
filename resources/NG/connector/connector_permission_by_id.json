@@ -1,0 +1,24 @@
+{
+    "permissions": [
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceIdentifier": "$resourceIdentifier",
+            "permission": "core_connector_edit"
+        },
+        {
+            "resourceScope": {
+                "accountIdentifier": "$accountIdentifier",
+                "orgIdentifier": "$orgIdentifier",
+                "projectIdentifier": "$projectIdentifier"
+            },
+            "resourceType": "CONNECTOR",
+            "resourceIdentifier": "$resourceIdentifier",
+            "permission": "core_connector_delete"
+        }
+    ]
+}

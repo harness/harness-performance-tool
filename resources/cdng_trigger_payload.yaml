@@ -1,0 +1,18 @@
+pipeline:
+    identifier: $pipelineIdentifier
+    stages:
+        - stage:
+              identifier: test
+              type: Deployment
+              spec:
+                  infrastructure:
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              releaseName: $releaseName
+                  serviceConfig:
+                    serviceRef: $svcName
+              variables:
+                  - name: resourceNamePrefix
+                    type: String
+                    value: $releaseName
