@@ -41,18 +41,20 @@ Above 2, 3, 4 can be added using script [testdata.sh](./data/scripts/testdata.sh
 
 #### Set up Locust on local machine
 1. Install python3 ```brew install python3 ```  
-2. Install Locust > ```pip3 install locust```  
-3. Git clone  
-4. Navigate to cloned repo directory
+2. Install Locust > ```pip3 install locust```
+3. Append SMP certificates to python cacert.pem file  
+   a. locate cacert.pem file via terminal `python -c "import certifi; print(certifi.where())"`   
+4. Git clone
 5. Update locust master ip to '0.0.0.0' in [variables.sh](./variables.sh)
 6. Execute > ```locust -f locust_tasks/tasks```
 
 #### Set up Locust on GCP cluster  
-1. Connect to GCP cluster
-2. Procure static IP address
-3. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
-4. Execute [install.sh](./install.sh) under cloned directory
-5. ./install.sh
+1. Git clone
+2. Connect to GCP cluster
+3. Procure static IP address
+4. Add SMP certificates to [smp_certificates.pem](./smp_certifcates.pem)
+5. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
+5. Execute [install.sh](./install.sh) under cloned directory `./install.sh`
 
 ### [Test Execution](#)
 

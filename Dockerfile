@@ -24,6 +24,9 @@ ADD data /data
 #Add resources
 ADD resources /resources
 
+#Add smp certificates file
+ADD smp_certifcates.pem /smp_certifcates.pem
+
 ADD run.sh /run.sh
 
 # Install the required dependencies via pip
