@@ -37,4 +37,4 @@ spec:
   selector:
     app: locust-master
   type: LoadBalancer
-  loadBalancerIP: $LOCUST_MASTER_URL
+  loadBalancerIP: $LOCUST_MASTER_IP

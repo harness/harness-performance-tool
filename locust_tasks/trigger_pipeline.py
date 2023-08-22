@@ -3,6 +3,7 @@ import base64
 import json
 import time
 import requests
+import logging
 from random import choice
 from string import ascii_lowercase
 from locust.exception import StopUser
@@ -23,16 +24,21 @@ def checker(environment):
 
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
-    global deployment_count_needed
-    deployment_count_needed = environment.parsed_options.pipeline_execution_count
-    global deployment_count
-    deployment_count = 0
-    global pipeline_link
-    pipeline_link = environment.parsed_options.pipeline_url
-    global env
-    env = environment.parsed_options.env
+    environment.runner.state = "TESTDATA SETUP"
+    try:
+        global deployment_count_needed
+        deployment_count_needed = environment.parsed_options.pipeline_execution_count
+        global deployment_count
+        deployment_count = 0
+        global pipeline_link
+        pipeline_link = environment.parsed_options.pipeline_url
+        global env
+        env = environment.parsed_options.env
 
-    utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+        utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+    except Exception:
+        logging.exception("Exception occurred while generating test data for TRIGGER_PIPELINE")
+        utils.stopLocustTests()
 
 class TRIGGER_PIPELINE(SequentialTaskSet):
 

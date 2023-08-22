@@ -4,6 +4,7 @@ import gevent
 import requests
 import yaml
 import base64
+import logging
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust import task, constant_pacing, SequentialTaskSet, events
 from locust.runners import WorkerRunner
@@ -43,77 +44,81 @@ def on_locust_init(environment, **_kwargs):
 
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
-    testdata_setup = False
-    arr = utils.getTestClasses(environment)
-    for ar in arr:
-        try:
-            ar = ar.replace('_CLASS', '') if '_CLASS' in ar else ar
-            getattr(sys.modules[__name__], ar)
-            testdata_setup = True
-        except Exception:
-            pass
+    environment.runner.state = "TESTDATA SETUP"
+    try:
+        testdata_setup = False
+        arr = utils.getTestClasses(environment)
+        for ar in arr:
+            try:
+                getattr(sys.modules[__name__], ar)
+                testdata_setup = True
+            except Exception:
+                pass
 
-    if testdata_setup == True:
-        global hostname
-        hostname = environment.host
-        env = environment.parsed_options.env
+        if testdata_setup == True:
+            global hostname
+            hostname = environment.host
+            env = environment.parsed_options.env
 
-        utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+            utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
 
-        # pre-requisite
-        # create org, project, secret, gitConn, dockerConn, k8sConn, template
+            # pre-requisite
+            # create org, project, secret, gitConn, dockerConn, k8sConn, template
 
-        global accountId
-        global uniqueId
-        global projectId
-        projectId = "perf_project"
-        global githubConnId
-        githubConnId = "perf_conn_github"
-        global dockerConnId
-        dockerConnId = "perf_conn_docker"
-        global templateId
-        templateId = "perf_template"
-        global templateVersionId
-        templateVersionId = "version1"
-        global k8sConnId
-        k8sConnId = "perf_conn_k8s_del"
-        global namespace
-        namespace = 'default'
-        global delegate_tag
-        delegate_tag = 'perf-delegate'
-        global repoUrl
-
-        # generate bearer token for test data setup
-        username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
-        creds = next(username_list)[0].split(':')
-        c = creds[0] + ':' + creds[1]
-        en = base64.b64encode(c.encode('ascii'))
-        base64UsernamePassword = 'Basic ' + en.decode('ascii')
-        json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
-        bearerToken = json_response['resource']['token']
-        accountId = json_response['resource']['defaultAccountId']
-
-        # executing on master to avoid running on multiple workers
-        if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
+            global accountId
             global uniqueId
-            uniqueId = utils.getUniqueString()
-            environment.runner.send_message("ci_create_pipeline", uniqueId)
-            print("GENERATING TEST DATA ON CI_CREATE_PIPELINE WITH UNIQUE ID - " + uniqueId)
-            orgId = "auto_org_" + uniqueId
-            organization.createOrg(hostname, orgId, accountId, bearerToken)
-            project.createProject(hostname, projectId, orgId, accountId, bearerToken)
-            connector.createDockerConnectorAnonymous(hostname, accountId, orgId, projectId, dockerConnId,
-                                                     'https://index.docker.io/v2/', bearerToken)
-            create_pipeline_template(hostname, templateId, templateVersionId, accountId, orgId, projectId, dockerConnId,
-                                     bearerToken)
-            connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag,
-                                                  bearerToken)
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
-            # use existing harness secret eg: user0 (repo userid) | token0 (repo user token)
-            connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId, repoUrl,
-                                                    'account.user0', 'account.token0', bearerToken)
+            global projectId
+            projectId = "perf_project"
+            global githubConnId
+            githubConnId = "perf_conn_github"
+            global dockerConnId
+            dockerConnId = "perf_conn_docker"
+            global templateId
+            templateId = "perf_template"
+            global templateVersionId
+            templateVersionId = "version1"
+            global k8sConnId
+            k8sConnId = "perf_conn_k8s_del"
+            global namespace
+            namespace = 'default'
+            global delegate_tag
+            delegate_tag = 'perf-delegate'
+            global repoUrl
+
+            # generate bearer token for test data setup
+            username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
+            creds = next(username_list)[0].split(':')
+            c = creds[0] + ':' + creds[1]
+            en = base64.b64encode(c.encode('ascii'))
+            base64UsernamePassword = 'Basic ' + en.decode('ascii')
+            json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
+            bearerToken = json_response['resource']['token']
+            accountId = json_response['resource']['defaultAccountId']
+
+            # executing on master to avoid running on multiple workers
+            if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
+                global uniqueId
+                uniqueId = utils.getUniqueString()
+                environment.runner.send_message("ci_create_pipeline", uniqueId)
+                print("GENERATING TEST DATA ON CI_CREATE_PIPELINE WITH UNIQUE ID - " + uniqueId)
+                orgId = "auto_org_" + uniqueId
+                organization.createOrg(hostname, orgId, accountId, bearerToken)
+                project.createProject(hostname, projectId, orgId, accountId, bearerToken)
+                connector.createDockerConnectorAnonymous(hostname, accountId, orgId, projectId, dockerConnId,
+                                                         'https://index.docker.io/v2/', bearerToken)
+                create_pipeline_template(hostname, templateId, templateVersionId, accountId, orgId, projectId, dockerConnId,
+                                         bearerToken)
+                connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag,
+                                                      bearerToken)
+                varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
+                json_resp = json.loads(varResponse.content)
+                repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+                # use existing harness secret eg: user0 (repo userid) | token0 (repo user token)
+                connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId, repoUrl,
+                                                        'account.user0', 'account.token0', bearerToken)
+    except Exception:
+        logging.exception("Exception occurred while generating test data for CI_CREATE_PIPELINE")
+        utils.stopLocustTests()
 
 def create_pipeline_template(hostname, identifier, versionId, accountId, orgId, projectId, connectorRef, bearerToken):
     with open(getPath('resources/NG/pipeline/ci/step_template_payload.yaml'), 'r+') as f:

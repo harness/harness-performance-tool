@@ -4,6 +4,7 @@ import re
 import uuid
 import logging
 import requests
+import subprocess
 
 userid_list = None
 
@@ -92,20 +93,25 @@ def log_error_response(response):
     logging.error("---- Request & Response print END ----")
 
 def getLocustMasterUrl():
-    LOCUST_MASTER_URL = '<LOCUST_MASTER_URL>'
-    remote_locust_master_url = 'http://'+ LOCUST_MASTER_URL + ':8089'
-    local_locust_master_url = 'http://0.0.0.0:8089'
-    headers = {'Connection': 'keep-alive'}
+    command = "grep -oE \"LOCUST_MASTER_IP='([^']+)'\" variables.sh | cut -d\"'\" -f2"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    ip = result.stdout.strip()
+
     try:
-        requests.get(remote_locust_master_url, headers=headers, timeout=1)
-        return remote_locust_master_url
+        if ip == '0.0.0.0' or ip == '<LOCUST_MASTER_IP>':
+            locust_url = 'http://0.0.0.0:8089'
+        else:
+            locust_url = 'http://' + os.environ.get('LOCUST_MASTER_IP') + ':8089'
+        headers = {'Connection': 'keep-alive'}
+        requests.get(locust_url, headers=headers, timeout=1)
+        return locust_url
     except Exception:
-        try:
-            requests.get(local_locust_master_url, headers=headers, timeout=1)
-            return local_locust_master_url
-        except Exception:
-            return None
-    return None
+        return 'http://0.0.0.0:8089' # fallback to localhost
+
+def stopLocustTests():
+    headers = {'Connection': 'keep-alive'}
+    stopResponse = requests.get(getLocustMasterUrl() + '/stop', headers=headers)
+    return stopResponse
 
 class CSVReader:
 

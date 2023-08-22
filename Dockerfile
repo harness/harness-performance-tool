@@ -40,6 +40,7 @@ RUN pip3 install -r /locust_tasks/requirements.txt
 RUN chmod 777 -R /resources/*
 
 ENV PYTHONPATH "${PYTHONPATH}:/"
+ENV LOCUST_MASTER_IP=to_be_replaced_from_variables.sh
 
 # Start Locust using LOCUS_OPTS environment variable
 ENTRYPOINT ["/run.sh"]

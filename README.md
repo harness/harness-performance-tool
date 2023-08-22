@@ -43,15 +43,16 @@ Above 2, 3, 4 can be added using script [testdata.sh](./data/scripts/testdata.sh
 1. Install python3 ```brew install python3 ```  
 2. Install Locust > ```pip3 install locust```  
 3. Git clone  
-4. Navigate to cloned repo directory  
-5. Execute > ```locust -f locust_tasks/tasks```
+4. Navigate to cloned repo directory
+5. Update locust master ip to '0.0.0.0' in [variables.sh](./variables.sh)
+6. Execute > ```locust -f locust_tasks/tasks```
 
 #### Set up Locust on GCP cluster  
 1. Connect to GCP cluster
-2. Procure static IP address 
-2. Update GCP project, cluster namespace and locust master url (static ip) in [variables.sh](./variables.sh)
-3. Execute [install.sh](./install.sh) under cloned directory
-> ./install.sh
+2. Procure static IP address
+3. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
+4. Execute [install.sh](./install.sh) under cloned directory
+5. ./install.sh
 
 ### [Test Execution](#)
 
@@ -80,14 +81,20 @@ Pick pipeline link from Harness UI Left menu > Builds > Select Project > Click P
 
 Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
 
-Note : There could be some delay (~ 60seconds) before actual test execution start, due to pre-requisite data being generated
 ```
 ![](./docs/img/locust_params.png)
 
+#### Testdata setup 
+
+There might be a slight delay of approximately 60 seconds before the test execution begins, as pre-requisite data is being generated  
+STATUS = TESTDATA SETUP is set on locust web UI during this phase  
+**Note:** Any error during this phase is not visible on locust WebUI and had to be checked in locust master logs
+
+![](./docs/img/testdata_setup.png)
 
 #### Execute test scripts via Curl
 
-> curl --location '<LOCUST_MASTER_URL>:8089/swarm' \
+> curl --location '<LOCUST_MASTER_IP>:8089/swarm' \
 --header 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' \
 --data 'user_count=2&spawn_rate=1&host=<HARNESS_SMP_URL>&run_time=2m&test_scenario=CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE&pipeline_url=&pipeline_execution_count=1'  
   
