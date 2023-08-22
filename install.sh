@@ -14,9 +14,8 @@ fi
 # set GCP project
 gcloud config set project $PROJECT
 
-# set locust mater url
-file="./locust_tasks/utilities/utils.py"
-perl -pi -e "s/<LOCUST_MASTER_URL>/$LOCUST_MASTER_URL/g" ${file}
+# set locust mater ip as env variable
+perl -pi -e "s/ENV LOCUST_MASTER_IP=.*/ENV LOCUST_MASTER_IP=$LOCUST_MASTER_IP/" Dockerfile
 
 # build locust image
 if $build_locust_image; then

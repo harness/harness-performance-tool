@@ -48,116 +48,120 @@ def on_locust_init(environment, **_kwargs):
 
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
-    testdata_setup = False
-    arr = utils.getTestClasses(environment)
-    for ar in arr:
-        try:
-            ar = ar.replace('_CLASS', '') if '_CLASS' in ar else ar
-            getattr(sys.modules[__name__], ar)
-            testdata_setup = True
-        except Exception:
-            pass
+    environment.runner.state = "TESTDATA SETUP"
+    try:
+        testdata_setup = False
+        arr = utils.getTestClasses(environment)
+        for ar in arr:
+            try:
+                getattr(sys.modules[__name__], ar)
+                testdata_setup = True
+            except Exception:
+                pass
 
-    if testdata_setup:
-        global hostname
-        hostname = environment.host
-        global deployment_count_needed
-        deployment_count_needed = environment.parsed_options.pipeline_execution_count
-        global deployment_count
-        deployment_count = 0
-        env = environment.parsed_options.env
+        if testdata_setup:
+            global hostname
+            hostname = environment.host
+            global deployment_count_needed
+            deployment_count_needed = environment.parsed_options.pipeline_execution_count
+            global deployment_count
+            deployment_count = 0
+            env = environment.parsed_options.env
 
-        utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+            utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
 
-        global uniqueId
-        global accountId
-        global orgId
-        global projectId
-        global awsSecretKeyId
-        global awsAccessKeyId
-        global awsConnId
-        global serviceId
-        global envId
-        global infraId
-        global k8sSecretId
-        global k8sConnId
-        global delegate_tag
-
-        global awsRegion
-        global awsArtifactImage
-        global awsArtifactTag
-        global manifestRepoUrl
-        global manifestRepoCommitId
-        global k8sClusterUrl
-
-        projectId = "perf_project"
-        awsSecretKeyId = "account.awssecretkey"  # secret should be present already on account level
-        awsAccessKeyId = "account.awsaccesskey"  # secret should be present already on account level
-        k8sSecretId = "account.k8ssatoken"  # secret should be present already on account level
-        awsConnId = "perf_conn_aws"
-        k8sConnId = "perf_conn_k8s"
-        envId = "perf_env_k8s"
-        serviceId = "perf_svc_k8s"
-        infraId = "perf_infra_k8s"
-
-        username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
-        creds = next(username_list)[0].split(':')
-        c = creds[0] + ':' + creds[1]
-        en = base64.b64encode(c.encode('ascii'))
-        base64UsernamePassword = 'Basic ' + en.decode('ascii')
-        json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
-        bearerToken = json_response['resource']['token']
-        accountId = json_response['resource']['defaultAccountId']
-
-        # executing on master to avoid running on multiple workers
-        if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
             global uniqueId
-            uniqueId = utils.getUniqueString()
-            environment.runner.send_message("cd_pipeline_run", uniqueId)
-            print(f"Generating test data for CD_PIPELINE_RUN with ID {uniqueId}")
-            orgId = "auto_cd_k8s_org_" + uniqueId
-            organization.createOrg(hostname, orgId, accountId, bearerToken)
-            project.createProject(hostname, projectId, orgId, accountId, bearerToken)
+            global accountId
+            global orgId
+            global projectId
+            global awsSecretKeyId
+            global awsAccessKeyId
+            global awsConnId
+            global serviceId
+            global envId
+            global infraId
+            global k8sSecretId
+            global k8sConnId
+            global delegate_tag
 
-            manifestRepoUrl = get_account_variable(hostname, bearerToken, accountId, 'manifestRepoUrl')
-            manifestRepoCommitId = get_account_variable(hostname, bearerToken, accountId,
-                                                        'manifestRepoCommitId')
-            k8sClusterUrl = get_account_variable(hostname, bearerToken, accountId, 'k8sClusterUrl')
-            awsRegion = get_account_variable(hostname, bearerToken, accountId, 'awsRegion')
-            awsArtifactImage = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactImage')
-            awsArtifactTag = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactTag')
-            delegate_tag = get_account_variable(hostname, bearerToken, accountId, 'cdDelegateSelector')
+            global awsRegion
+            global awsArtifactImage
+            global awsArtifactTag
+            global manifestRepoUrl
+            global manifestRepoCommitId
+            global k8sClusterUrl
 
-            connector.createAwsConnector(hostname, bearerToken, accountId, orgId, projectId, awsConnId, awsSecretKeyId,
-                                         awsAccessKeyId, awsRegion)
-            for index in range(15):
-                create_github_connector(hostname, bearerToken, accountId, orgId, projectId, manifestRepoUrl, index)
+            projectId = "perf_project"
+            awsSecretKeyId = "account.awssecretkey"  # secret should be present already on account level
+            awsAccessKeyId = "account.awsaccesskey"  # secret should be present already on account level
+            k8sSecretId = "account.k8ssatoken"  # secret should be present already on account level
+            awsConnId = "perf_conn_aws"
+            k8sConnId = "perf_conn_k8s"
+            envId = "perf_env_k8s"
+            serviceId = "perf_svc_k8s"
+            infraId = "perf_infra_k8s"
 
-            response = service.createK8sSvcWithRuntimeGHConnectorAndEcrConnector(hostname, accountId, orgId, projectId,
-                                                                                 bearerToken, serviceId,
-                                                                                 manifestRepoCommitId,
-                                                                                 awsConnId, awsArtifactImage,
-                                                                                 awsArtifactTag,
-                                                                                 awsRegion)
-            log_response(response, 'INIT:CREATE_SERVICE')
+            username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
+            creds = next(username_list)[0].split(':')
+            c = creds[0] + ':' + creds[1]
+            en = base64.b64encode(c.encode('ascii'))
+            base64UsernamePassword = 'Basic ' + en.decode('ascii')
+            json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
+            bearerToken = json_response['resource']['token']
+            accountId = json_response['resource']['defaultAccountId']
 
-            response = envHelper.createEnvironment(hostname, accountId, orgId, projectId, envId, bearerToken)
-            log_response(response, 'INIT:CREATE_ENV')
+            # executing on master to avoid running on multiple workers
+            if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
+                global uniqueId
+                uniqueId = utils.getUniqueString()
+                environment.runner.send_message("cd_pipeline_run", uniqueId)
+                print(f"Generating test data for CD_PIPELINE_RUN with ID {uniqueId}")
+                orgId = "auto_cd_k8s_org_" + uniqueId
+                organization.createOrg(hostname, orgId, accountId, bearerToken)
+                project.createProject(hostname, projectId, orgId, accountId, bearerToken)
 
-            response = connector.createK8sConnector(hostname, accountId, orgId, projectId, k8sConnId, k8sClusterUrl,
-                                                    k8sSecretId,
-                                                    bearerToken)
-            log_response(response, 'INIT:CREATE_CONNECTOR')
+                manifestRepoUrl = get_account_variable(hostname, bearerToken, accountId, 'manifestRepoUrl')
+                manifestRepoCommitId = get_account_variable(hostname, bearerToken, accountId,
+                                                            'manifestRepoCommitId')
+                k8sClusterUrl = get_account_variable(hostname, bearerToken, accountId, 'k8sClusterUrl')
+                awsRegion = get_account_variable(hostname, bearerToken, accountId, 'awsRegion')
+                awsArtifactImage = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactImage')
+                awsArtifactTag = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactTag')
+                delegate_tag = get_account_variable(hostname, bearerToken, accountId, 'cdDelegateSelector')
 
-            response = infra.createK8sDirectInfra(hostname, accountId, orgId, projectId, infraId, envId, k8sConnId,
-                                                  bearerToken)
-            log_response(response, 'INIT:CREATE_INFRA')
+                connector.createAwsConnector(hostname, bearerToken, accountId, orgId, projectId, awsConnId, awsSecretKeyId,
+                                             awsAccessKeyId, awsRegion)
+                for index in range(15):
+                    create_github_connector(hostname, bearerToken, accountId, orgId, projectId, manifestRepoUrl, index)
 
-            pipeline_id = "perf_pipeline_" + uniqueId + "0"
-            response = create_k8s_pipeline(hostname, accountId, orgId, projectId, pipeline_id, serviceId, envId,
-                                           infraId,
-                                           delegate_tag, bearerToken)
-            log_response(response, 'INIT:CREATE_PIPELINE')
+                response = service.createK8sSvcWithRuntimeGHConnectorAndEcrConnector(hostname, accountId, orgId, projectId,
+                                                                                     bearerToken, serviceId,
+                                                                                     manifestRepoCommitId,
+                                                                                     awsConnId, awsArtifactImage,
+                                                                                     awsArtifactTag,
+                                                                                     awsRegion)
+                log_response(response, 'INIT:CREATE_SERVICE')
+
+                response = envHelper.createEnvironment(hostname, accountId, orgId, projectId, envId, bearerToken)
+                log_response(response, 'INIT:CREATE_ENV')
+
+                response = connector.createK8sConnector(hostname, accountId, orgId, projectId, k8sConnId, k8sClusterUrl,
+                                                        k8sSecretId,
+                                                        bearerToken)
+                log_response(response, 'INIT:CREATE_CONNECTOR')
+
+                response = infra.createK8sDirectInfra(hostname, accountId, orgId, projectId, infraId, envId, k8sConnId,
+                                                      bearerToken)
+                log_response(response, 'INIT:CREATE_INFRA')
+
+                pipeline_id = "perf_pipeline_" + uniqueId + "0"
+                response = create_k8s_pipeline(hostname, accountId, orgId, projectId, pipeline_id, serviceId, envId,
+                                               infraId,
+                                               delegate_tag, bearerToken)
+                log_response(response, 'INIT:CREATE_PIPELINE')
+    except Exception:
+        logging.exception("Exception occurred while generating test data for CD_PIPELINE_RUN")
+        utils.stopLocustTests()
 
 
 def create_github_connector(hostname, bearerToken, accountId, orgId, projectId, manifestRepoUrl, index):
