@@ -34,7 +34,7 @@ Step2: Execute script /data/scripts/user_provision.sh (update the inputs and run
        	url=http://<ip> : ip address or complete URL of Harness .
        	username=<username> # user email should be same as user used in Step1.
        	password=<password> # Password of the user.
-        userCount=1   # No of users needs to be provisioned.
+          userCount=1   # No of users needs to be provisioned.
        	new_email_id_prefix="harness_perftest_"  # Prefix for new users.
        	new_email_id_domain="@test.com"	 # email domain for the new user.
        	new_user_password="random_password" # any random password. we are keeping the same password for all the users.
