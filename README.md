@@ -26,12 +26,14 @@ These credentials will be used during test runs for performing authentication
 #### Multiple users can be added to Harness by following the below steps.
 
 Step1: Run mongo query to add admin user into harness User group user. Replace the username with valid email who is part of account admin in the account. This user should be used to provision the users in step2
-       db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})
+
+       ```db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})```
+
 Step2: Execute script /data/scripts/user_provision.sh (update the inputs and run)
+
        	url=http://<ip> : ip address or complete URL of Harness .
        	username=<username> # user email should be same as user used in Step1.
        	password=<password> # Password of the user.
-
         userCount=1   # No of users needs to be provisioned.
        	new_email_id_prefix="harness_perftest_"  # Prefix for new users.
        	new_email_id_domain="@test.com"	 # email domain for the new user.
