@@ -23,7 +23,7 @@ These credentials will be used during test runs for performing authentication
 
 > eg: auto_perf_1597@mailinator.com:Test@123
 
-Multiple users can be added to Harness by following the below steps.
+#### Multiple users can be added to Harness by following the below steps.
 
 Step1: Run mongo query to add admin user into harness User group user. Replace the username with valid email who is part of account admin in the account. This user should be used to provision the users in step2
        db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})
@@ -35,7 +35,7 @@ Step2: Execute script /data/scripts/user_provision.sh (update the inputs and run
         userCount=1   # No of users needs to be provisioned.
        	new_email_id_prefix="harness_perftest_"  # Prefix for new users.
        	new_email_id_domain="@test.com"	 # email domain for the new user.
-       	new_user_password="random_password" # any random password. we are keeping the same password for all the users. 
+       	new_user_password="random_password" # any random password. we are keeping the same password for all the users.
 
 #### 2. Add github userIds and tokens as Harness secrets (via below script)
 Referred in locust test scripts while creating or running pipelines
