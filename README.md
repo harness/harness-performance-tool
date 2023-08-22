@@ -29,7 +29,7 @@ Step1: Run mongo query to add admin user into harness User group user. Replace t
 
        db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})
 
-Step2: Execute script ###data/scripts/user_provision.sh (update the inputs and run)
+Step2: Execute script `data/scripts/user_provision.sh` (update the inputs and run)
 
        	url=http://<ip> : ip address or complete URL of Harness .
        	username=<username> # user email should be same as user used in Step1.
