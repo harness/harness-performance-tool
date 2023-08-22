@@ -27,7 +27,7 @@ These credentials will be used during test runs for performing authentication
 
 Step1: Run mongo query to add admin user into harness User group user. Replace the username with valid email who is part of account admin in the account. This user should be used to provision the users in step2
 
-       ```db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})```
+       db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>""})})
 
 Step2: Execute script /data/scripts/user_provision.sh (update the inputs and run)
 
