@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 import gevent
@@ -86,6 +87,7 @@ def initiator(environment, **kwargs):
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
+            global repoName
             global pipelineList
             pipelineList = []
 
@@ -98,6 +100,12 @@ def initiator(environment, **kwargs):
             json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
             bearerToken = json_response['resource']['token']
             accountId = json_response['resource']['defaultAccountId']
+
+            # get repo url and repo name
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
 
             # create ci pipelines to use in updates
             # executing on master to avoid running on multiple workers
@@ -115,9 +123,6 @@ def initiator(environment, **kwargs):
                                          bearerToken)
                 connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag,
                                                       bearerToken)
-                varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-                json_resp = json.loads(varResponse.content)
-                repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
                 # use existing harness secret eg: user0 (repo userid) | token0 (repo user token)
                 connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId, repoUrl,
                                                         'account.user0', 'account.token0', bearerToken)
