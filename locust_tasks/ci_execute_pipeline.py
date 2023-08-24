@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 import gevent
@@ -85,6 +86,7 @@ def initiator(environment, **kwargs):
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
+            global repoName
             global pipelineId
             pipelineId = 'perf_pipeline'
 
@@ -97,6 +99,12 @@ def initiator(environment, **kwargs):
             json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
             bearerToken = json_response['resource']['token']
             accountId = json_response['resource']['defaultAccountId']
+
+            # get repo url and repo name
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
 
             # create ci pipelines to use in updates
             # executing on master to avoid running on multiple workers
@@ -114,9 +122,6 @@ def initiator(environment, **kwargs):
                                          bearerToken)
                 connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag,
                                                       bearerToken)
-                varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-                json_resp = json.loads(varResponse.content)
-                repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
                 # use existing harness secret eg: user0 (repo userid) | token0 (repo user token)
                 connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId, repoUrl,
                                                         'account.user0', 'account.token0', bearerToken)
@@ -426,7 +431,7 @@ class CI_EXECUTE_PIPELINE(SequentialTaskSet):
 
     @task
     def getScmBranchList_36(self):
-        response = scm.getScmBranchlist(self, self.accountID, self.orgId, projectId, githubConnId, 'springboot', self.bearerToken)
+        response = scm.getScmBranchlist(self, self.accountID, self.orgId, projectId, githubConnId, repoName, self.bearerToken)
         json_resp = json.loads(response.content)
         if response.status_code != 200:
             utils.print_error_log(response)

@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 import gevent
@@ -89,6 +90,7 @@ def initiator(environment, **kwargs):
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
+            global repoName
             global githubConnId
             githubConnId = "perf_conn_github_"
             # eg: "perf_conn_github_" + uniqueId + 1
@@ -103,6 +105,12 @@ def initiator(environment, **kwargs):
             bearerToken = json_response['resource']['token']
             accountId = json_response['resource']['defaultAccountId']
 
+            # get repo url and repo name
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
+
             # executing on master to avoid running on multiple workers
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
                 uniqueId = utils.getUniqueString()
@@ -114,9 +122,6 @@ def initiator(environment, **kwargs):
                 connector.createDockerConnectorAnonymous(hostname, accountId, orgId, projectId, dockerConnId,
                                                              'https://index.docker.io/v2/', bearerToken)
                 connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag, bearerToken)
-                varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-                json_resp = json.loads(varResponse.content)
-                repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
                 create_pipeline_template(hostname, stepTemplateId, templateVersionId, accountId, orgId, projectId, dockerConnId,
                                          bearerToken)
                 def setup_data(index):
