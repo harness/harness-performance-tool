@@ -2,7 +2,7 @@ import json
 from locust_tasks.utilities.utils import getPath
 import requests
 
-def createService(obj, accountId, orgId, projectId, gitConnId, dockerConnId, serviceName, bearerToken, page=''):
+def createService(obj, accountId, orgId, projectId, gitConnId, repoBranchName, dockerConnId, serviceName, bearerToken, page=''):
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     dataMap = {
@@ -10,7 +10,8 @@ def createService(obj, accountId, orgId, projectId, gitConnId, dockerConnId, ser
         "orgIdentifier": orgId,
         "projectIdentifier": projectId,
         "gitConnId": gitConnId,
-        "dockerConnId": dockerConnId
+        "dockerConnId": dockerConnId,
+        "branch": repoBranchName
     }
     with open(getPath('resources/NG/service/service.json'), 'r+') as f:
         # Updating the Json File

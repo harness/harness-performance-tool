@@ -5,6 +5,6 @@ pipeline:
       codebase:
         build:
           spec:
-            branch: master
+            branch: $branch
           type: branch
   object Object: properties.ci.codebase

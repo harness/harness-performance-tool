@@ -21,7 +21,7 @@ pipeline:
             type: KubernetesDirect
             spec:
               connectorRef: $k8sConnId
-              namespace: default
+              namespace: $namespace
               automountServiceAccountToken: true
               nodeSelector: {}
               os: Linux

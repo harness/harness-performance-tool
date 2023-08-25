@@ -24,6 +24,6 @@ trigger:
               value: $payloadConditionValue
           headerConditions: []
           actions: []
-  pipelineBranchName: master
+  pipelineBranchName: $branch
   inputSetRefs:
     - $inputSetRefs

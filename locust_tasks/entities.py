@@ -85,7 +85,6 @@ def initiator(environment, **kwargs):
             global k8sConnId
             k8sConnId = "perf_conn_k8s_del"
             global namespace
-            namespace = 'default'
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
@@ -102,10 +101,11 @@ def initiator(environment, **kwargs):
             accountId = json_response['resource']['defaultAccountId']
 
             # get repo url and repo name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoUrl = variable.getVariableValue(hostname, accountId, '', '', 'repoUrl', bearerToken)
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
+
+            # get k8s namespace
+            namespace = variable.getVariableValue(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
 
             # executing on master to avoid running on multiple workers
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):

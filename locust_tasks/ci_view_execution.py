@@ -82,11 +82,11 @@ def initiator(environment, **kwargs):
             global k8sConnId
             k8sConnId = "perf_conn_k8s_del"
             global namespace
-            namespace = 'default'
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
             global repoName
+            global repoBranchName
 
             # generate bearer token for test data setup
             username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
@@ -99,10 +99,14 @@ def initiator(environment, **kwargs):
             accountId = json_response['resource']['defaultAccountId']
 
             # get repo url and repo name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoUrl = variable.getVariableValue(hostname, accountId, '', '', 'repoUrl', bearerToken)
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
+
+            # get repo branch name
+            repoBranchName = variable.getVariableValue(hostname, accountId, '', '', 'repoBranchName', bearerToken)
+
+            # get k8s namespace
+            namespace = variable.getVariableValue(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
 
             # create ci pipelines to view execution
             # executing on master to avoid running on multiple workers
@@ -196,7 +200,8 @@ def execute_ci_pipeline(hostname, accountId, orgId, projectId, pipelineId, beare
         payload = str(yaml.dump(pipelineData, default_flow_style=False))
         f.truncate()
     dataMap = {
-        "pipelineId": pipelineId
+        "pipelineId": pipelineId,
+        "branch": repoBranchName
     }
     url = "/pipeline/api/pipeline/execute/"+pipelineId+"?routingId="+accountId+"&accountIdentifier="+accountId+"&projectIdentifier="+projectId+"&orgIdentifier="+orgId+"&moduleType=&notifyOnlyUser=false"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)

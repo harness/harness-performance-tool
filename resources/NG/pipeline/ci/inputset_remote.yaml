@@ -11,5 +11,5 @@ inputSet:
           build:
             type: branch
             spec:
-              branch: master
+              branch: $branch
   object Object: pipeline.properties.ci.codebase

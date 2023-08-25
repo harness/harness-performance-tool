@@ -6,4 +6,4 @@ pipeline:
                 build:
                     type: branch
                     spec:
-                        branch: master
+                        branch: $branch

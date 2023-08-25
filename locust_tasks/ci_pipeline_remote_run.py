@@ -85,11 +85,11 @@ def initiator(environment, **kwargs):
             global k8sConnId
             k8sConnId = "perf_conn_k8s_del"
             global namespace
-            namespace = 'default'
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
             global repoName
+            global repoBranchName
 
             # generate bearer token for test data setup
             username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
@@ -102,10 +102,14 @@ def initiator(environment, **kwargs):
             accountId = json_response['resource']['defaultAccountId']
 
             # get repo url and repo name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoUrl = variable.getVariableValue(hostname, accountId, '', '', 'repoUrl', bearerToken)
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
+
+            # get repo branch name
+            repoBranchName = variable.getVariableValue(hostname, accountId, '', '', 'repoBranchName', bearerToken)
+
+            # get k8s namespace
+            namespace = variable.getVariableValue(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
 
             # executing on master to avoid running on multiple workers
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
@@ -161,7 +165,7 @@ def create_pipeline_step_template(hostname, identifier, versionId, accountId, or
         "versionLabel": versionId,
         "parallelism": "5"
     }
-    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch=master&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+identifier+".yaml"
+    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch="+repoBranchName+"&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+identifier+".yaml"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline step template created as part of test data failed")
@@ -183,7 +187,7 @@ def create_pipeline_stage_template(hostname, identifier, versionId, accountId, o
         "stepTemplateRef": stepTemplateRef,
         "stepVersionLabel": stepVersionLabel
     }
-    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch=master&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+ identifier +".yaml"
+    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch="+repoBranchName+"&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+ identifier +".yaml"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline stage template created as part of test data failed")
@@ -204,7 +208,7 @@ def create_ci_pipeline_remote(hostname, identifier, accountId, orgId, projectId,
         "stageVersionLabel": stageVersionId
     }
     url = "/pipeline/api/pipelines/v2?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&storeType=REMOTE" \
-          + "&connectorRef=" + githubConnId + "&commitMsg=" + identifier + "&createPr=false&isNewBranch=false&branch=master&repoName="+repoName+"&filePath=.harness%2F" + identifier + ".yaml"
+          + "&connectorRef=" + githubConnId + "&commitMsg=" + identifier + "&createPr=false&isNewBranch=false&branch="+repoBranchName+"&repoName="+repoName+"&filePath=.harness%2F" + identifier + ".yaml"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline created as part of test data failed")
@@ -220,10 +224,11 @@ def create_ci_inputset_remote(hostname, identifier, accountId, orgId, projectId,
         "identifier": identifier,
         "orgIdentifier": orgId,
         "projectIdentifier": projectId,
-        "pipelineIdentifier": pipelineIdentifier
+        "pipelineIdentifier": pipelineIdentifier,
+        "branch": repoBranchName
     }
     url = "/pipeline/api/inputSets?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&pipelineIdentifier=" + pipelineIdentifier \
-            + "&pipelineBranch=master&connectorRef="+githubConnId+"&repoName="+repoName+"&branch=master&filePath=.harness%2F"+identifier+".yaml&storeType=REMOTE&commitMsg="+identifier+"&createPr=false&isNewBranch=false"
+            + "&pipelineBranch="+repoBranchName+"&connectorRef="+githubConnId+"&repoName="+repoName+"&branch="+repoBranchName+"&filePath=.harness%2F"+identifier+".yaml&storeType=REMOTE&commitMsg="+identifier+"&createPr=false&isNewBranch=false"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline input set created as part of test data failed")
@@ -242,10 +247,11 @@ def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, 
         "pipelineIdentifier": pipelineIdentifier,
         "connectorRef": githubConnId,
         "inputSetRefs": inputSetId,
-        "payloadConditionValue": uniqueId
+        "payloadConditionValue": uniqueId,
+        "branch": repoBranchName
     }
     url = "/pipeline/api/triggers?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&targetIdentifier=" + pipelineIdentifier + \
-          "&ignoreError=false&branch=master&connectorRef=" + githubConnId + "&repoName="+repoName+"&storeType=REMOTE"
+          "&ignoreError=false&branch="+repoBranchName+"&connectorRef=" + githubConnId + "&repoName="+repoName+"&storeType=REMOTE"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline trigger created as part of test data failed")
@@ -298,7 +304,6 @@ class CI_PIPELINE_REMOTE_RUN(SequentialTaskSet):
     @task
     def triggerPipeline(self):
         global deployment_count
-        time.sleep(3)
         if deployment_count < deployment_count_needed:
             response = helpers.triggerWithWebHook(self, accountId, uniqueId)
 
