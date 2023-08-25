@@ -2,14 +2,16 @@
 
 # inputs
 
-url=http://<ip>
-username=<username>
-password=<password>
-repoUserIds=("<userId1>" "<userId2>")
-repoTokens=("<token1>" "<token2>")
-repoUrl=<repoUrl>
-organizationCount=<count>
-projectCount=<count>
+url=http://<ip> # https://12.1.2.31
+username=<username> # harness username
+password=<password> # harness user password
+repoUserIds=("<userId1>" "<userId2>") # repo user id
+repoTokens=("<token1>" "<token2>") # repo user token - https://github.com/settings/tokens
+repoUrl=<repoUrl> # https://github.com/../repoName
+repoBranchName=<branchName> # main
+k8sNamespace=<namespace> # default
+organizationCount=<count> # 5
+projectCount=<count> # 2 (per organization)
 
 
 ### ------ cd input variables BEGIN ------ 
@@ -166,6 +168,48 @@ response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountI
     }
 }')
 echo "\\n# adding github repository url as harness variable : repoUrl"
+echo "$response\\n"
+
+# add github repository branch name as harness variable
+response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountId}&accountIdentifier=${accountId}" \
+--header "Authorization: Bearer $token" \
+--header "content-type: application/json" \
+--data '{
+    "variable": {
+        "name": "repoBranchName",
+        "identifier": "repoBranchName",
+        "description": "",
+        "type": "String",
+        "spec": {
+            "valueType": "FIXED",
+            "fixedValue": "'$repoBranchName'",
+            "allowedValues": [],
+            "defaultValue": ""
+        }
+    }
+}')
+echo "\\n# adding github repository branch as harness variable : repoBranchName"
+echo "$response\\n"
+
+# add k8s cluster namespace as harness variable
+response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountId}&accountIdentifier=${accountId}" \
+--header "Authorization: Bearer $token" \
+--header "content-type: application/json" \
+--data '{
+    "variable": {
+        "name": "k8sNamespace",
+        "identifier": "k8sNamespace",
+        "description": "",
+        "type": "String",
+        "spec": {
+            "valueType": "FIXED",
+            "fixedValue": "'$k8sNamespace'",
+            "allowedValues": [],
+            "defaultValue": ""
+        }
+    }
+}')
+echo "\\n# adding k8s cluster namespace as harness variable : k8sNamespace"
 echo "$response\\n"
 
 

@@ -90,11 +90,11 @@ def initiator(environment, **kwargs):
             global k8sConnId
             k8sConnId = "perf_conn_k8s_del"
             global namespace
-            namespace = 'default'
             global delegate_tag
             delegate_tag = 'perf-delegate'
             global repoUrl
             global repoName
+            global repoBranchName
             global githubConnId
             githubConnId = "perf_conn_github_"
             # eg: "perf_conn_github_" + uniqueId + 1
@@ -114,6 +114,16 @@ def initiator(environment, **kwargs):
             json_resp = json.loads(varResponse.content)
             repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
+
+            # get repo branch name
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoBranchName', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            repoBranchName = str(json_resp['data']['variable']['spec']['fixedValue'])
+
+            # get k8s namespace
+            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
+            json_resp = json.loads(varResponse.content)
+            namespace = str(json_resp['data']['variable']['spec']['fixedValue'])
 
             # executing on master to avoid running on multiple workers
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
@@ -163,7 +173,7 @@ def create_pipeline_step_template(hostname, identifier, versionId, accountId, or
         "versionLabel": versionId,
         "parallelism": "5"
     }
-    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch=master&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+identifier+".yaml"
+    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch="+repoBranchName+"&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+identifier+".yaml"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline step template created as part of test data failed")
@@ -185,7 +195,7 @@ def create_pipeline_stage_template(hostname, identifier, versionId, accountId, o
         "stepTemplateRef": stepTemplateRef,
         "stepVersionLabel": stepVersionLabel
     }
-    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch=master&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+ identifier +".yaml"
+    url = "/template/api/templates?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&comments=&commitMsg="+ identifier +"&createPr=false&isNewBranch=false&branch="+repoBranchName+"&storeType=REMOTE&connectorRef="+ githubConnId +"&repoName="+repoName+"&filePath=.harness%2F"+ identifier +".yaml"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
     if response.status_code != 200:
         print("Pipeline stage template created as part of test data failed")
@@ -256,7 +266,7 @@ class CI_PIPELINE_REMOTE_SAVE(SequentialTaskSet):
             "stageVersionLabel": templateVersionId
         }
         url = "/pipeline/api/pipelines/v2?accountIdentifier=" + self.accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + self.orgId + "&storeType=REMOTE" \
-              + "&connectorRef=" + self.github_conn_id + "&commitMsg=" + self.pipelineId + "&createPr=false&isNewBranch=false&branch=master&repoName="+repoName+"&filePath=.harness%2F" + self.pipelineId + ".yaml"
+              + "&connectorRef=" + self.github_conn_id + "&commitMsg=" + self.pipelineId + "&createPr=false&isNewBranch=false&branch="+repoBranchName+"&repoName="+repoName+"&filePath=.harness%2F" + self.pipelineId + ".yaml"
         response = pipeline.postPipelineWithYamlPayload(self, payload, dataMap, url, self.bearerToken, "CREATE CI PIPELINE - ")
         time.sleep(10)
         if response.status_code != 200:
@@ -266,7 +276,7 @@ class CI_PIPELINE_REMOTE_SAVE(SequentialTaskSet):
     def getPipelineDetails_2(self):
         print("----GET ID--" + self.pipelineId)
         response = pipeline.getPipelineDetails_remote(self, self.accountId, self.orgId, projectId, self.pipelineId,
-                                                      "master", self.github_conn_id, repoName, self.bearerToken)
+                                                      repoBranchName, self.github_conn_id, repoName, self.bearerToken)
         json_resp = json.loads(response.content)
         try:
             self.lastCommitId = str(json_resp['data']['gitDetails']['commitId'])
@@ -295,7 +305,7 @@ class CI_PIPELINE_REMOTE_SAVE(SequentialTaskSet):
             "stageVersionLabel": templateVersionId
         }
         url = "/pipeline/api/pipelines/v2/"+self.pipelineId+"?accountIdentifier=" + self.accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + self.orgId + "&storeType=REMOTE" \
-              + "&connectorRef=" + self.github_conn_id + "&commitMsg=update " + self.pipelineId + "&createPr=false&isNewBranch=false&branch=master&lastCommitId="+self.lastCommitId+"&repoName="+repoName+"&filePath=.harness%2F" + self.pipelineId + ".yaml"+"&lastObjectId="+self.lastObjectId
+              + "&connectorRef=" + self.github_conn_id + "&commitMsg=update " + self.pipelineId + "&createPr=false&isNewBranch=false&branch="+repoBranchName+"&lastCommitId="+self.lastCommitId+"&repoName="+repoName+"&filePath=.harness%2F" + self.pipelineId + ".yaml"+"&lastObjectId="+self.lastObjectId
         response = pipeline.putPipelineWithYamlPayload(self, payload, dataMap, url, self.bearerToken, "UPDATE CI PIPELINE - ")
 
         if response.status_code != 200:

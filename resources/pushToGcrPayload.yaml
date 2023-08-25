@@ -6,7 +6,7 @@ pipeline:
                 build:
                     type: branch
                     spec:
-                        branch: master
+                        branch: $branch
     stages:
         - stage:
               identifier: perf

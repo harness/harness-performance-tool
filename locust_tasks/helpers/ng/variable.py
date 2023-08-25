@@ -1,3 +1,4 @@
+import json
 
 import requests
 
@@ -14,3 +15,8 @@ def getVariableDetails(obj, accountId, orgId, projectId, variableId, bearerToken
     else:
         response = obj.client.get(url, headers=headers, name="GET_VARIABLE_DETAILS - " + page)
     return response
+
+def getVariableValue(obj, accountId, orgId, projectId, variableId, bearerToken):
+    varResponse = getVariableDetails(obj, accountId, orgId, projectId, variableId, bearerToken)
+    json_resp = json.loads(varResponse.content)
+    return str(json_resp['data']['variable']['spec']['fixedValue'])
