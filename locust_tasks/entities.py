@@ -101,15 +101,11 @@ def initiator(environment, **kwargs):
             accountId = json_response['resource']['defaultAccountId']
 
             # get repo url and repo name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoUrl = variable.getVariableValue(hostname, accountId, '', '', 'repoUrl', bearerToken)
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
 
             # get k8s namespace
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            namespace = str(json_resp['data']['variable']['spec']['fixedValue'])
+            namespace = variable.getVariableValue(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
 
             # executing on master to avoid running on multiple workers
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):

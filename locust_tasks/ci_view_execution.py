@@ -86,6 +86,7 @@ def initiator(environment, **kwargs):
             delegate_tag = 'perf-delegate'
             global repoUrl
             global repoName
+            global repoBranchName
 
             # generate bearer token for test data setup
             username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
@@ -98,20 +99,14 @@ def initiator(environment, **kwargs):
             accountId = json_response['resource']['defaultAccountId']
 
             # get repo url and repo name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoUrl', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoUrl = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoUrl = variable.getVariableValue(hostname, accountId, '', '', 'repoUrl', bearerToken)
             repoName = re.search(r'/([^/]+?)(?:\.git)?$', repoUrl).group(1)
 
             # get repo branch name
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'repoBranchName', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            repoBranchName = str(json_resp['data']['variable']['spec']['fixedValue'])
+            repoBranchName = variable.getVariableValue(hostname, accountId, '', '', 'repoBranchName', bearerToken)
 
             # get k8s namespace
-            varResponse = variable.getVariableDetails(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
-            json_resp = json.loads(varResponse.content)
-            namespace = str(json_resp['data']['variable']['spec']['fixedValue'])
+            namespace = variable.getVariableValue(hostname, accountId, '', '', 'k8sNamespace', bearerToken)
 
             # create ci pipelines to view execution
             # executing on master to avoid running on multiple workers
