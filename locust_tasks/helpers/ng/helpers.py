@@ -4,7 +4,7 @@ from locust_tasks.utilities.utils import getPath
 import requests
 import yaml
 from locust import HttpUser
-defaultAccountId = "DbSRs-u5QgukRP_ODtvGkw"
+
 # Orgs
 def createOrg(orgName, accountId, bearerToken):
     authorization = "Bearer " + bearerToken
@@ -27,7 +27,7 @@ def createOrg(orgName, accountId, bearerToken):
                 payload = payload.replace('$' + key, dataMap[key])
     # Hitting the ENTRYPOINT
     createOrgResponse = HttpUser.client.post(
-        "/ng/api/organizations?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&__rtag=createOrg",
+        "/ng/api/organizations?routingId=" + accountId + "&accountIdentifier=" + accountId + "&__rtag=createOrg",
         data=payload, headers=headers)
     if createOrgResponse.status_code != 200:
         print(createOrgResponse.status_code)
@@ -56,7 +56,7 @@ def createInfra(hostname, infraName, envType, projectName, orgName, accountId, b
         for key in dataMap:
             if key is not None:
                 payload = payload.replace('$' + key, dataMap[key])
-    createInfraResponse = requests.put(hostname + "/ng/api/environmentsV2/upsert?routingId="+defaultAccountId+"&accountIdentifier="+accountId, data=payload, headers=headers)
+    createInfraResponse = requests.put(hostname + "/ng/api/environmentsV2/upsert?routingId="+accountId+"&accountIdentifier="+accountId, data=payload, headers=headers)
     if createInfraResponse.status_code != 200:
         print('Infra Creation is failed')
         print(createInfraResponse.request.url)
@@ -69,7 +69,7 @@ def deleteOrg(self, orgName, accountId, bearerToken):
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     deleteOrgResponse = self.client.delete(
-        "/ng/api/organizations/" + orgName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&__rtag=deleteOrg",
+        "/ng/api/organizations/" + orgName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&__rtag=deleteOrg",
         headers=headers, name='Delete_Org')
     print(deleteOrgResponse.status_code)
     print(deleteOrgResponse.text)
@@ -99,7 +99,7 @@ def createProject(hostname, projectName, orgName, accountId, bearerToken):
         for key in dataMap:
             if key is not None:
                 payload = payload.replace('$' + key, dataMap[key])
-    createProjectResponse = requests.post(hostname + "/ng/api/projects?routingId="+defaultAccountId+"&accountIdentifier="+accountId+"&orgIdentifier="+orgName+ "&__rtag=createProject", data=payload, headers=headers)
+    createProjectResponse = requests.post(hostname + "/ng/api/projects?routingId="+accountId+"&accountIdentifier="+accountId+"&orgIdentifier="+orgName+ "&__rtag=createProject", data=payload, headers=headers)
     if createProjectResponse.status_code != 200:
         print('Project Creation is failed')
         print(createProjectResponse.request.url)
@@ -112,7 +112,7 @@ def deleteProject(self, projectName, orgName, accountId, bearerToken):
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     deleteProjectResponse = self.client.delete(
-        "/ng/api/projects/" + projectName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&__rtag=deleteProject",
+        "/ng/api/projects/" + projectName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&__rtag=deleteProject",
         headers=headers, name='Delete_Project')
     print(deleteProjectResponse.status_code)
     print(deleteProjectResponse.text)
@@ -136,7 +136,7 @@ def createCDNG_Service(self, svcName, projectName, orgName, accountId, bearerTok
         for key in dataMap:
             if key is not None:
                 payload = payload.replace('$' + key, dataMap[key])
-    createServiceResponse = self.client.put("/ng/api/servicesV2/upsert?routingId="+defaultAccountId+"&accountIdentifier="+accountId, data=payload, headers=headers, name='Create_Service')
+    createServiceResponse = self.client.put("/ng/api/servicesV2/upsert?routingId="+accountId+"&accountIdentifier="+accountId, data=payload, headers=headers, name='Create_Service')
     if createServiceResponse.status_code != 200:
         print(createServiceResponse.content)
     return createServiceResponse.status_code
@@ -168,7 +168,7 @@ def createSecret(self, secretName, secretValue, projectName, orgName, accountId,
             if key is not None:
                 payload = payload.replace('$' + key, dataMap[key])
     createSecretResponse = self.client.post(
-        "/ng/api/v2/secrets?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName,
+        "/ng/api/v2/secrets?routingId=" + accountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName,
         data=payload, headers=headers)
     print(createSecretResponse.status_code)
     if createSecretResponse.status_code != 200:
@@ -180,7 +180,7 @@ def deleteSecret(self, secretName, projectName, orgName, accountId, bearerToken,
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     deleteSecretResponse = self.client.delete(
-        "/ng/api/v2/secrets/" + secretName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&__rtag=" + purpose,
+        "/ng/api/v2/secrets/" + secretName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&__rtag=" + purpose,
         headers=headers, name=purpose)
     print(deleteSecretResponse.status_code)
     print(deleteSecretResponse.text)
@@ -206,7 +206,7 @@ def createDocketConnector(self, connectorName, projectName, orgName, dockerRegis
         f.truncate()  # remove remaining part
     # Hitting the ENTRYPOINT
     createDocketConnectorResponse = self.client.post(
-        "/ng/api/connectors?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&__rtag=createDocketConnector",
+        "/ng/api/connectors?routingId=" + accountId + "&accountIdentifier=" + accountId + "&__rtag=createDocketConnector",
         json=dockerData, headers=headers)
     print(createDocketConnectorResponse.status_code)
     print(createDocketConnectorResponse.text)
@@ -217,7 +217,7 @@ def deleteConnector(self, connectorName, projectName, orgName, accountId, bearer
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     deleteConnectorResponse = self.client.delete(
-        "/ng/api/connectors/" + connectorName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName + "&__rtag=" + purpose,
+        "/ng/api/connectors/" + connectorName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName + "&__rtag=" + purpose,
         headers=headers, name=purpose)
     print(deleteConnectorResponse.status_code)
     print(deleteConnectorResponse.text)
@@ -242,7 +242,7 @@ def createK8sConnector(self, k8ConnectorName, projectName, orgName, masterUrl, u
         f.truncate()
     # Hitting the ENTRYPOINT
     createK8sConnectorResponse = self.client.post(
-        "/ng/api/connectors?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&__rtag=createK8sConnector",
+        "/ng/api/connectors?routingId=" + accountId + "&accountIdentifier=" + accountId + "&__rtag=createK8sConnector",
         json=k8sData, headers=headers)
     print(createK8sConnectorResponse.status_code)
     print(createK8sConnectorResponse.text)
@@ -270,7 +270,7 @@ def createGitHubConnector(self, gitHubConnectorName, projectName, orgName, gitHu
         f.truncate()
     # Hitting the ENTRYPOINT
     createGitHubConnectorResponse = self.client.post(
-        "/ng/api/connectors?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&__rtag=create_GITHUB_Connector",
+        "/ng/api/connectors?routingId=" + accountId + "&accountIdentifier=" + accountId + "&__rtag=create_GITHUB_Connector",
         json=gitHubData, headers=headers)
     print(createGitHubConnectorResponse.status_code)
     print(createGitHubConnectorResponse.text)
@@ -282,7 +282,7 @@ def triggerPipeline(self, pipelineName, projectName, orgName, moduleName, accoun
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/yaml', 'Authorization': authorization}
     triggerPipelineResponse = self.client.post(
-        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName,
+        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName,
         data=payload, headers=headers, name='Trigger_Pipeline')
     if triggerPipelineResponse.status_code != 200:
         print(triggerPipelineResponse.content)
@@ -293,7 +293,7 @@ def triggerPipelineWithoutPayload(self, pipelineName, projectName, orgName, modu
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/yaml', 'Authorization': authorization}
     triggerPipelineResponse = self.client.post(
-        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName + "&__rtag=triggerPipeline",
+        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName + "&__rtag=triggerPipeline",
         headers=headers, name='Trigger_Pipeline')
     if triggerPipelineResponse.status_code != 200:
         print(triggerPipelineResponse.content)
@@ -303,7 +303,7 @@ def triggerPipelineWithoutPayloadWithGitExp(self, pipelineName, projectName, org
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/yaml', 'Authorization': authorization}
     triggerPipelineResponse = self.client.post(
-        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName + "&branch=master&parentEntityConnectorRef=GitConnector "+"&__rtag=triggerPipeline",
+        "/pipeline/api/pipeline/execute/" + pipelineName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&projectIdentifier=" + projectName + "&orgIdentifier=" + orgName + "&moduleType=" + moduleName + "&branch=master&parentEntityConnectorRef=GitConnector "+"&__rtag=triggerPipeline",
         headers=headers, name='Trigger_Pipeline')
     if triggerPipelineResponse.status_code != 200:
         print(triggerPipelineResponse.content)
@@ -385,7 +385,7 @@ def deletePipeline(self, pipelineName, projectName, orgName, accountId, bearerTo
     authorization = "Bearer " + bearerToken
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     deletePipelineResponse = self.client.delete(
-        "/pipeline/api/pipelines/" + pipelineName + "?routingId=" + defaultAccountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName + "&__rtag=deletePipeline",
+        "/pipeline/api/pipelines/" + pipelineName + "?routingId=" + accountId + "&accountIdentifier=" + accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName + "&__rtag=deletePipeline",
         headers=headers, name='Delete_Pipeline')
     print(deletePipelineResponse.status_code)
     print(deletePipelineResponse.text)
@@ -396,7 +396,7 @@ def validateConnector(self, connectorName, projectName, orgName, accountId, bear
     print("authorization:" + authorization)
     headers = {'Content-Type': 'application/json', 'Authorization': authorization}
     validateConnectorResponse = self.client.post(
-        "/ng/api/connectors/testConnection/" + connectorName + "?routingId=" + defaultAccountId + "&accountIdentifier=" +
+        "/ng/api/connectors/testConnection/" + connectorName + "?routingId=" + accountId + "&accountIdentifier=" +
         accountId + "&orgIdentifier=" + orgName + "&projectIdentifier=" + projectName, headers=headers)
     print(validateConnectorResponse.status_code)
     print(validateConnectorResponse.text)
