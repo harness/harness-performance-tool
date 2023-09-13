@@ -27,6 +27,7 @@ ADD resources /resources
 #Add smp certificates file
 ADD smp_certifcates.pem /smp_certifcates.pem
 
+ADD variables.sh /variables.sh
 ADD run.sh /run.sh
 
 # Install the required dependencies via pip
