@@ -5,6 +5,9 @@ This document outlines all the necessary details required for:
 1. Setting up a performance test tool (Locust - https://locust.io/) to generate load on Harness system
 2. Python scripts that emulate actual user scenarios via Harness apis https://apidocs.harness.io/
 
+### Performance Test Results
+[Test Report - 06-Oct-2023](./reports/06-Oct'23.md)
+
 ### Quick overview
 [locust_setup_run.mov](https://drive.google.com/file/d/1oU9r0_IBOs908D0YmpRUrCzW9EqmR_hV/view)
 
