@@ -1,4 +1,4 @@
 pyyaml
 hvac
-locust-plugins
+locust-plugins==4.2.0
 cryptography

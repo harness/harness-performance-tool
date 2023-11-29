@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Start with a base locust:1.5.1 image
-FROM locustio/locust:2.5.0
+FROM locustio/locust:2.16.1
 
 # Add the external tasks directory into /tasks
 ADD locust_tasks /locust_tasks
