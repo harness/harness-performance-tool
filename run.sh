@@ -19,7 +19,7 @@ path=$(python -c "import certifi; print(certifi.where())")
 cat /smp_certifcates.pem >> $path
 rm /smp_certifcates.pem
 
-LOCUST="env host=$TARGET_HOST cluster=$CLUSTER /usr/local/bin/locust"
+LOCUST="env host=$TARGET_HOST cluster=$CLUSTER locust"
 #LOCUS_OPTS="-f /locust_tasks/tasks.py --headless --csv=booperf -u 1 -r 1 --run-time 60s --stop-timeout 99 --expect-workers 1 --host=$TARGET_HOST"
 LOCUS_OPTS="-f /locust_tasks/tasks.py --host=$TARGET_HOST"
 #LOCUS_OPTS="-f /locust_tasks/tasks.py -u 5 -t 60 --headless -i 10 --csv=booperf --host=$TARGET_HOST"
