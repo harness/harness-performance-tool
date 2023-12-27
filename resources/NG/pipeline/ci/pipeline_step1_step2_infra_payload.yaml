@@ -24,13 +24,13 @@ pipeline:
                   name: Run_1
                   identifier: Run_1
                   strategy:
-                    parallelism: 4
+                    parallelism: 5
                   spec:
                     connectorRef: $dockerConnectorRef
                     image: alpine
                     shell: Sh
                     command: |-
-                      sleep 70
+                      sleep 100
                       export abc=xyz
                     outputVariables:
                       - name: abc
