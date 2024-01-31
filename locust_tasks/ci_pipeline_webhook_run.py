@@ -6,6 +6,7 @@ import requests
 import yaml
 import base64
 import logging
+import random
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust import task, constant_pacing, SequentialTaskSet, events
 from locust.runners import WorkerRunner
@@ -33,8 +34,8 @@ def checker(environment):
             environment.runner.quit()
             return
 
-def ci_pipeline_run(environment, msg, **kwargs):
-    # Fired when the worker receives a message of type 'ci_pipeline_run'
+def ci_pipeline_webhook_run(environment, msg, **kwargs):
+    # Fired when the worker receives a message of type 'ci_pipeline_webhook_run'
     global uniqueId
     uniqueId = msg.data
 
@@ -43,7 +44,7 @@ def on_locust_init(environment, **_kwargs):
     if not isinstance(environment.runner, WorkerRunner):
         gevent.spawn(checker, environment)
     if not isinstance(environment.runner, MasterRunner):
-        environment.runner.register_message("ci_pipeline_run", ci_pipeline_run)
+        environment.runner.register_message("ci_pipeline_webhook_run", ci_pipeline_webhook_run)
 
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
@@ -116,8 +117,8 @@ def initiator(environment, **kwargs):
             if isinstance(environment.runner, MasterRunner) | isinstance(environment.runner, LocalRunner):
                 global uniqueId
                 uniqueId = utils.getUniqueString()
-                environment.runner.send_message("ci_pipeline_run", uniqueId)
-                print("GENERATING TEST DATA ON CI_PIPELINE_RUN WITH UNIQUE ID - " + uniqueId)
+                environment.runner.send_message("ci_pipeline_webhook_run", uniqueId)
+                print("GENERATING TEST DATA ON ci_pipeline_webhook_run WITH UNIQUE ID - " + uniqueId)
                 orgId = "auto_org_" + uniqueId
                 organization.createOrg(hostname, orgId, accountId, bearerToken)
                 project.createProject(hostname, projectId, orgId, accountId, bearerToken)
@@ -134,12 +135,16 @@ def initiator(environment, **kwargs):
                     pipelineId = "perf_pipeline_"+uniqueId+str(index)
                     create_ci_pipeline(hostname, pipelineId, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId,
                                        templateId, templateVersionId, namespace, bearerToken)
+                    inputSetId = "perf_inputset_" + uniqueId + str(index)
+                    create_ci_inputset(hostname, inputSetId, accountId, orgId, projectId, pipelineId, bearerToken)
+                    triggerId = "perf_trigger_remote_" + uniqueId + str(index)
+                    create_ci_trigger_remote(hostname, triggerId, accountId, orgId, projectId, githubConnId, pipelineId, inputSetId, bearerToken)
 
-                pipeline_count = 1
+                pipeline_count = 15
                 for index in range(pipeline_count):
                     setup_data(index)
     except Exception:
-        logging.exception("Exception occurred while generating test data for CI_PIPELINE_RUN")
+        logging.exception("Exception occurred while generating test data for ci_pipeline_webhook_run")
         utils.stopLocustTests()
 
 def create_pipeline_template(hostname, identifier, versionId, accountId, orgId, projectId, connectorRef, bearerToken):
@@ -185,8 +190,50 @@ def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, github
         print("Pipeline created as part of test data failed")
         utils.print_error_log(response)
 
+def create_ci_inputset(hostname, identifier, accountId, orgId, projectId, pipelineIdentifier, bearerToken):
+    with open(getPath('resources/NG/pipeline/ci/inputset_remote.yaml'), 'r+') as f:
+        # Updating the Json File
+        pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+        payload = str(yaml.dump(pipelineData, default_flow_style=False))
+        f.truncate()
+    dataMap = {
+        "identifier": identifier,
+        "orgIdentifier": orgId,
+        "projectIdentifier": projectId,
+        "pipelineIdentifier": pipelineIdentifier,
+        "branch": repoBranchName
+    }
+    url = "/pipeline/api/inputSets?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&pipelineIdentifier=" + pipelineIdentifier + "&storeType=INLINE"
+    response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
+    if response.status_code != 200:
+        print("Pipeline input set created as part of test data failed")
+        utils.print_error_log(response)
+
+def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, githubConnId, pipelineIdentifier, inputSetId, bearerToken):
+    with open(getPath('resources/NG/pipeline/ci/trigger_remote.yaml'), 'r+') as f:
+        # Updating the Json File
+        pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+        payload = str(yaml.dump(pipelineData, default_flow_style=False))
+        f.truncate()
+    dataMap = {
+        "identifier": identifier,
+        "orgIdentifier": orgId,
+        "projectIdentifier": projectId,
+        "pipelineIdentifier": pipelineIdentifier,
+        "connectorRef": githubConnId,
+        "inputSetRefs": inputSetId,
+        "payloadConditionValue": uniqueId,
+        "branch": repoBranchName
+    }
+    url = "/pipeline/api/triggers?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&targetIdentifier=" + pipelineIdentifier + \
+          "&ignoreError=false&branch="+repoBranchName+"&connectorRef=" + githubConnId + "&repoName="+repoName+"&storeType=REMOTE"
+    response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
+    if response.status_code != 200:
+        print("Pipeline trigger created as part of test data failed")
+        utils.print_error_log(response)
+
 # Trigger non-git pipeline added above 'deployment_count_needed' times
-class CI_PIPELINE_RUN(SequentialTaskSet):
+class CI_PIPELINE_WEBHOOK_RUN(SequentialTaskSet):
     def data_initiator(self):
         self.__class__.wait_time = constant_pacing(1 // 1)
 
@@ -220,39 +267,23 @@ class CI_PIPELINE_RUN(SequentialTaskSet):
         self.orgId = "auto_org_" + uniqueId
 
     @task
-        def triggerPipeline(self):
-            global deployment_count
-            deployment_count += 1
-            if deployment_count <= deployment_count_needed:
-                id = "perf_pipeline_" + uniqueId + str(random.randint(0, 14))
-                with open(getPath('resources/NG/pipeline/inputs_codebase.yaml'), 'r+') as f:
-                    # Updating the Json File
-                    pipelineData = yaml.load(f, Loader=yaml.FullLoader)
-                    payload = str(yaml.dump(pipelineData, default_flow_style=False))
-                    f.truncate()
-                dataMap = {
-                    "pipelineId": id,
-                    "branch": repoBranchName
-                }
-                if dataMap is not None:
-                    for key in dataMap:
-                        if key is not None:
-                            payload = payload.replace('$' + key, dataMap[key])
-                response = helpers.triggerPipeline(self, id, projectId, self.orgId, "ci",
-                                                   self.accountId, self.bearerToken, payload)
+    def triggerPipeline(self):
+        global deployment_count
+        deployment_count += 1
+        if deployment_count <= deployment_count_needed:
+            response = helpers.triggerWithWebHook(self, accountId, uniqueId)
 
-
-                if response.status_code == 200:
-                    print('Pipeline is triggered successfully ')
-                    if deployment_count >= deployment_count_needed:
-                        print('Deployment Count Reached, hence its Perf test is gonna be stopped')
-                        headers = {'Connection': 'keep-alive'}
-                        stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
-                        if stopResponse.status_code == 200:
-                            print('Perf Test has been stopped')
-                            self.interrupt()
-                        else:
-                            print('Alarm Perf Tests are still running')
-                            print(stopResponse.content)
-                else:
-                    utils.print_error_log(response)
+            if response.status_code == 200:
+                print('Pipeline is triggered successfully ')
+                if deployment_count >= deployment_count_needed:
+                    print('Deployment Count Reached, hence its Perf test is gonna be stopped')
+                    headers = {'Connection': 'keep-alive'}
+                    stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
+                    if stopResponse.status_code == 200:
+                        print('Perf Test has been stopped')
+                        self.interrupt()
+                    else:
+                        print('Alarm Perf Tests are still running')
+                        print(stopResponse.content)
+            else:
+                utils.print_error_log(response)

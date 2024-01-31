@@ -131,12 +131,12 @@ def initiator(environment, **kwargs):
                     step_templateVersionId = "version1"
                     create_pipeline_step_template(hostname, step_templateId, step_templateVersionId, accountId, orgId, projectId,
                                                   dockerConnId, githubConnId, bearerToken)
-                    time.sleep(2)
+                    time.sleep(5)
                     stage_templateId = "perf_stage_template_" + uniqueId + str(index)
                     stage_templateVersionId = "version1"
                     create_pipeline_stage_template(hostname, stage_templateId, stage_templateVersionId, accountId, orgId, projectId,
                                                   k8sConnId, githubConnId, step_templateId, step_templateVersionId, bearerToken)
-                    time.sleep(2)
+                    time.sleep(5)
                     pipelineId = "perf_pipeline_remote_"+uniqueId+str(index)
                     create_ci_pipeline_remote(hostname, pipelineId, accountId, orgId, projectId, githubConnId, stage_templateId, stage_templateVersionId, bearerToken)
                     inputSetId = "perf_inputset_remote_" + uniqueId + str(index)
@@ -288,22 +288,9 @@ class CI_PIPELINE_REMOTE_RUN(SequentialTaskSet):
         # self.authentication() # CAN BE RUN WITHOUT LOGIN AS WELL
 
     @task
-    def executionChecker(self):
-        global deployment_count
-        if deployment_count >= deployment_count_needed:
-            print('Deployment Count Reached, hence its Perf test is gonna be stopped')
-            headers = {'Connection': 'keep-alive'}
-            stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
-            if stopResponse.status_code == 200:
-                print('Perf Test has been stopped')
-                self.interrupt()
-            else:
-                print('Alarm Perf Tests are still running')
-                print(stopResponse.content)
-
-    @task
     def triggerPipeline(self):
         global deployment_count
+        deployment_count += 1
         if deployment_count < deployment_count_needed:
             response = helpers.triggerWithWebHook(self, accountId, uniqueId)
 
