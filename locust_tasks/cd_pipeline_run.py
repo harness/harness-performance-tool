@@ -80,7 +80,6 @@ def initiator(environment, **kwargs):
             global serviceId
             global envId
             global infraId
-            global k8sSecretId
             global k8sConnId
             global delegate_tag
 
@@ -89,12 +88,10 @@ def initiator(environment, **kwargs):
             global awsArtifactTag
             global manifestRepoUrl
             global manifestRepoCommitId
-            global k8sClusterUrl
 
             projectId = "perf_project"
             awsSecretKeyId = "account.awssecretkey"  # secret should be present already on account level
             awsAccessKeyId = "account.awsaccesskey"  # secret should be present already on account level
-            k8sSecretId = "account.k8ssatoken"  # secret should be present already on account level
             awsConnId = "perf_conn_aws"
             k8sConnId = "perf_conn_k8s"
             envId = "perf_env_k8s"
@@ -123,7 +120,6 @@ def initiator(environment, **kwargs):
                 manifestRepoUrl = get_account_variable(hostname, bearerToken, accountId, 'manifestRepoUrl')
                 manifestRepoCommitId = get_account_variable(hostname, bearerToken, accountId,
                                                             'manifestRepoCommitId')
-                k8sClusterUrl = get_account_variable(hostname, bearerToken, accountId, 'k8sClusterUrl')
                 awsRegion = get_account_variable(hostname, bearerToken, accountId, 'awsRegion')
                 awsArtifactImage = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactImage')
                 awsArtifactTag = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactTag')
@@ -145,9 +141,7 @@ def initiator(environment, **kwargs):
                 response = envHelper.createEnvironment(hostname, accountId, orgId, projectId, envId, bearerToken)
                 log_response(response, 'INIT:CREATE_ENV')
 
-                response = connector.createK8sConnector(hostname, accountId, orgId, projectId, k8sConnId, k8sClusterUrl,
-                                                        k8sSecretId,
-                                                        bearerToken)
+                response = connector.createK8sConnector_delegate(hostname, accountId, orgId, projectId, k8sConnId, delegate_tag, bearerToken)
                 log_response(response, 'INIT:CREATE_CONNECTOR')
 
                 response = infra.createK8sDirectInfra(hostname, accountId, orgId, projectId, infraId, envId, k8sConnId,
