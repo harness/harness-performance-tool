@@ -13,7 +13,7 @@ template:
       image: alpine
       shell: Sh
       command: |-
-        total_time=140
+        total_time=360
         interval=1
         counter=0
 
