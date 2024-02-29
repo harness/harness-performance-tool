@@ -6,6 +6,7 @@ import requests
 import yaml
 import base64
 import logging
+import random
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust import task, constant_pacing, SequentialTaskSet, events
 from locust.runners import WorkerRunner
@@ -220,39 +221,39 @@ class CI_PIPELINE_RUN(SequentialTaskSet):
         self.orgId = "auto_org_" + uniqueId
 
     @task
-        def triggerPipeline(self):
-            global deployment_count
-            deployment_count += 1
-            if deployment_count <= deployment_count_needed:
-                id = "perf_pipeline_" + uniqueId + str(random.randint(0, 14))
-                with open(getPath('resources/NG/pipeline/inputs_codebase.yaml'), 'r+') as f:
-                    # Updating the Json File
-                    pipelineData = yaml.load(f, Loader=yaml.FullLoader)
-                    payload = str(yaml.dump(pipelineData, default_flow_style=False))
-                    f.truncate()
-                dataMap = {
-                    "pipelineId": id,
-                    "branch": repoBranchName
-                }
-                if dataMap is not None:
-                    for key in dataMap:
-                        if key is not None:
-                            payload = payload.replace('$' + key, dataMap[key])
-                response = helpers.triggerPipeline(self, id, projectId, self.orgId, "ci",
-                                                   self.accountId, self.bearerToken, payload)
+    def triggerPipeline(self):
+        global deployment_count
+        deployment_count += 1
+        if deployment_count <= deployment_count_needed:
+            id = "perf_pipeline_" + uniqueId + str(random.randint(0, 14))
+            with open(getPath('resources/NG/pipeline/inputs_codebase.yaml'), 'r+') as f:
+                # Updating the Json File
+                pipelineData = yaml.load(f, Loader=yaml.FullLoader)
+                payload = str(yaml.dump(pipelineData, default_flow_style=False))
+                f.truncate()
+            dataMap = {
+                "pipelineId": id,
+                "branch": repoBranchName
+            }
+            if dataMap is not None:
+                for key in dataMap:
+                    if key is not None:
+                        payload = payload.replace('$' + key, dataMap[key])
+            response = helpers.triggerPipeline(self, id, projectId, self.orgId, "ci",
+                                               self.accountId, self.bearerToken, payload)
 
 
-                if response.status_code == 200:
-                    print('Pipeline is triggered successfully ')
-                    if deployment_count >= deployment_count_needed:
-                        print('Deployment Count Reached, hence its Perf test is gonna be stopped')
-                        headers = {'Connection': 'keep-alive'}
-                        stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
-                        if stopResponse.status_code == 200:
-                            print('Perf Test has been stopped')
-                            self.interrupt()
-                        else:
-                            print('Alarm Perf Tests are still running')
-                            print(stopResponse.content)
-                else:
-                    utils.print_error_log(response)
+            if response.status_code == 200:
+                print('Pipeline is triggered successfully ')
+                if deployment_count >= deployment_count_needed:
+                    print('Deployment Count Reached, hence its Perf test is gonna be stopped')
+                    headers = {'Connection': 'keep-alive'}
+                    stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
+                    if stopResponse.status_code == 200:
+                        print('Perf Test has been stopped')
+                        self.interrupt()
+                    else:
+                        print('Alarm Perf Tests are still running')
+                        print(stopResponse.content)
+            else:
+                utils.print_error_log(response)

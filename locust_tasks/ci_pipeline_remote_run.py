@@ -152,7 +152,7 @@ def initiator(environment, **kwargs):
         utils.stopLocustTests()
 
 def create_pipeline_step_template(hostname, identifier, versionId, accountId, orgId, projectId, connectorRef, githubConnId, bearerToken):
-    with open(getPath('resources/NG/pipeline/ci/step_template_payload.yaml'), 'r+') as f:
+    with open(getPath('resources/NG/pipeline/ci/step_template_payload_1.yaml'), 'r+') as f:
         # Updating the Json File
         pipelineData = yaml.load(f, Loader=yaml.FullLoader)
         payload = str(yaml.dump(pipelineData, default_flow_style=False))
