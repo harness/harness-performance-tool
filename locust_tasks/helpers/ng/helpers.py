@@ -334,6 +334,29 @@ def triggerWithWebHook(self, accountId, payloadConditionValue):
         print(triggerWithWebHookResponse.content)
     return triggerWithWebHookResponse
 
+def triggerWithWebHookCD(self, accountId, payloadConditionValue):
+    headers = {'X-GitHub-Event': 'pull_request', 'content-type':'application/json'}
+    dataMap = {
+        "zen": payloadConditionValue
+    }
+    with open(getPath('resources/NG/pipeline/cd/cd_webhook_payload.json'), 'r+') as f:
+        triggerData = json.load(f)
+        f.seek(0)
+        json.dump(triggerData, f, indent=4)
+        f.truncate()
+    payload = json.dumps(triggerData)
+    if dataMap is not None:
+        for key in dataMap:
+            if key is not None:
+                payload = payload.replace('$' + key, dataMap[key])
+    triggerWithWebHookResponse = self.client.post(
+        "/ng/api/webhook?accountIdentifier={}".format(accountId), data=payload,
+        headers=headers, name='TriggerWebhook')
+    print(triggerWithWebHookResponse.content)
+    if triggerWithWebHookResponse.status_code != 200:
+        print("Webhook trigger api failed..")
+        print(triggerWithWebHookResponse.request.url)
+    return triggerWithWebHookResponse
 
 def createPipeline(self, pipelineName, projectName, orgName, dockerConnectorName, kubernetesConnectorName, accountId,
                    bearerToken):

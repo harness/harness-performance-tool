@@ -1,0 +1,31 @@
+trigger:
+  name: $identifier
+  identifier: $identifier
+  enabled: true
+  encryptedWebhookSecretIdentifier: ""
+  description: ""
+  tags: {}
+  orgIdentifier: $orgIdentifier
+  stagesToExecute: []
+  projectIdentifier: $projectIdentifier
+  pipelineIdentifier: $pipelineIdentifier
+  delegateSelectors:
+    - $delegate
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: PullRequest
+        spec:
+          connectorRef: $connectorRef
+          autoAbortPreviousExecutions: false
+          payloadConditions:
+            - key: <+trigger.payload.zen>
+              operator: Equals
+              value: $payloadConditionValue
+          headerConditions: []
+          actions: []
+  pipelineBranchName: $branch
+  inputSetRefs:
+    - $inputSetRefs
