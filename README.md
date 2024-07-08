@@ -63,7 +63,13 @@ Add 100 organisations and 20 projects in each organisation to populate some data
 Above 2, 3, 4 can be added using script [testdata.sh](./data/scripts/testdata.sh)  
 **Imp:** Change inputs in script to valid values and EXECUTE
 
-#### 5. Add delegate in Harness account with tag : perf-delegate
+#### 6. Add delegate in Harness account with tag : perf-delegate
+
+#### 7. Test execution via webhook triggers
+For test class - [CI_PIPELINE_WEBHOOK_RUN](./locust_tasks/ci_pipeline_webhook_run.py) update webhook payload on [ci_webhook_payload.json](./resources/NG/pipeline/ci/ci_webhook_payload.json)  
+For test class - [CD_PIPELINE_WEBHOOK_RUN](./locust_tasks/cd_pipeline_webhook_run.py) update webhook payload on [cd_webhook_payload.json](./resources/NG/pipeline/cd/cd_webhook_payload.json)  
+**Note:** Make sure to include {"zen": "$zen"} inside webhook payload
+
 
 ### [Locust installation](#)
 
