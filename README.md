@@ -15,6 +15,8 @@ This document outlines all the necessary details required for:
 [Test Report - 30-Apr-2024](./reports/30-Apr'24.md)  
 [Test Report - 05-June-2024](./reports/05-June'24.md)  
 [Test Report - 08-July-2024](./reports/08-July'24.md)  
+[Test Report - 28-Aug-2024](./reports/28-Aug'24.md)  
+[Test Report - 08-Jan-2025](./reports/08-Jan'25.md)  
 
 ### Quick overview
 [locust_setup_run.mov](https://drive.google.com/file/d/1oU9r0_IBOs908D0YmpRUrCzW9EqmR_hV/view)
