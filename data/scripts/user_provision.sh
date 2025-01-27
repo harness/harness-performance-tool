@@ -5,7 +5,7 @@ url=http://<ip>
 username=<username> # should be part of harness usergroup
 password=<password>
 
-userCount=1
+userCount=1 # no of users needs to be provisioned
 new_email_id_prefix="harness_perftest_"
 new_email_id_domain="@test.com"
 new_user_password="<random_password>"

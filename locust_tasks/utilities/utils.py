@@ -61,8 +61,8 @@ def getTestClasses(env):
     input_class = env.parsed_options.user_classes
     input_class1 = getCustomInputAsList(env.parsed_options.test_scenario)
     ip = input_class + input_class1
-    if 'CUSTOM_CLASS' in ip:
-        ip.remove('CUSTOM_CLASS')
+    if 'UserBehavior' in ip:
+        ip.remove('UserBehavior')
     return ip
 
 # alpha numeric

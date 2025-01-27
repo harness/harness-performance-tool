@@ -133,12 +133,13 @@ def initiator(environment, **kwargs):
                     connector.createGithubConnectorViaUserRef(hostname, accountId, orgId, projectId, githubConnId,
                                                     repoUrl, 'account.user'+str(index), 'account.token'+str(index), bearerToken)
                     pipelineId = "perf_pipeline_"+uniqueId+str(index)
+                    delegate_selected = delegate_tag
                     create_ci_pipeline(hostname, pipelineId, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId,
-                                       templateId, templateVersionId, namespace, bearerToken)
+                                       templateId, templateVersionId, namespace, delegate_selected, bearerToken)
                     inputSetId = "perf_inputset_" + uniqueId + str(index)
-                    create_ci_inputset(hostname, inputSetId, accountId, orgId, projectId, pipelineId, bearerToken)
+                    create_ci_inputset(hostname, inputSetId, accountId, orgId, projectId, pipelineId, delegate_selected, bearerToken)
                     triggerId = "perf_trigger_remote_" + uniqueId + str(index)
-                    create_ci_trigger_remote(hostname, triggerId, accountId, orgId, projectId, githubConnId, pipelineId, inputSetId, bearerToken)
+                    create_ci_trigger_remote(hostname, triggerId, accountId, orgId, projectId, githubConnId, pipelineId, inputSetId, delegate_selected, bearerToken)
 
                 pipeline_count = 15
                 for index in range(pipeline_count):
@@ -167,7 +168,7 @@ def create_pipeline_template(hostname, identifier, versionId, accountId, orgId, 
         print("Pipeline template created as part of test data failed")
         utils.print_error_log(response)
 
-def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId, templateId, templateVersionId, namespace, bearerToken):
+def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId, templateId, templateVersionId, namespace, delegate, bearerToken):
     with open(getPath('resources/NG/pipeline/ci/pipeline_step1_step2_infra_payload.yaml'), 'r+') as f:
         # Updating the Json File
         pipelineData = yaml.load(f, Loader=yaml.FullLoader)
@@ -182,7 +183,8 @@ def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, github
         "templateRef": templateId,
         "versionLabel": templateVersionId,
         "k8sConnectorRef": k8sConnId,
-        "namespace": namespace
+        "namespace": namespace,
+        "delegate": delegate
     }
     url = "/pipeline/api/pipelines/v2?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&storeType=INLINE"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
@@ -190,7 +192,7 @@ def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, github
         print("Pipeline created as part of test data failed")
         utils.print_error_log(response)
 
-def create_ci_inputset(hostname, identifier, accountId, orgId, projectId, pipelineIdentifier, bearerToken):
+def create_ci_inputset(hostname, identifier, accountId, orgId, projectId, pipelineIdentifier, delegate, bearerToken):
     with open(getPath('resources/NG/pipeline/ci/inputset_remote.yaml'), 'r+') as f:
         # Updating the Json File
         pipelineData = yaml.load(f, Loader=yaml.FullLoader)
@@ -201,7 +203,8 @@ def create_ci_inputset(hostname, identifier, accountId, orgId, projectId, pipeli
         "orgIdentifier": orgId,
         "projectIdentifier": projectId,
         "pipelineIdentifier": pipelineIdentifier,
-        "branch": repoBranchName
+        "branch": repoBranchName,
+        "delegate": delegate
     }
     url = "/pipeline/api/inputSets?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&pipelineIdentifier=" + pipelineIdentifier + "&storeType=INLINE"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
@@ -209,7 +212,7 @@ def create_ci_inputset(hostname, identifier, accountId, orgId, projectId, pipeli
         print("Pipeline input set created as part of test data failed")
         utils.print_error_log(response)
 
-def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, githubConnId, pipelineIdentifier, inputSetId, bearerToken):
+def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, githubConnId, pipelineIdentifier, inputSetId, delegate, bearerToken):
     with open(getPath('resources/NG/pipeline/ci/trigger_remote.yaml'), 'r+') as f:
         # Updating the Json File
         pipelineData = yaml.load(f, Loader=yaml.FullLoader)
@@ -223,7 +226,8 @@ def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, 
         "connectorRef": githubConnId,
         "inputSetRefs": inputSetId,
         "payloadConditionValue": uniqueId,
-        "branch": repoBranchName
+        "branch": repoBranchName,
+        "delegate": delegate
     }
     url = "/pipeline/api/triggers?routingId=" + accountId +"&accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&targetIdentifier=" + pipelineIdentifier + \
           "&ignoreError=false&branch="+repoBranchName+"&connectorRef=" + githubConnId + "&repoName="+repoName+"&storeType=REMOTE"

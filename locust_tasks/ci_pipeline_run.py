@@ -92,6 +92,8 @@ def initiator(environment, **kwargs):
             global repoUrl
             global repoName
             global repoBranchName
+            global pipeline_count
+            pipeline_count = 1
 
             # generate bearer token for test data setup
             username_list = CSVReader(getPath('data/{}/credentials.csv'.format(env)))
@@ -134,9 +136,8 @@ def initiator(environment, **kwargs):
                                                     repoUrl, 'account.user'+str(index), 'account.token'+str(index), bearerToken)
                     pipelineId = "perf_pipeline_"+uniqueId+str(index)
                     create_ci_pipeline(hostname, pipelineId, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId,
-                                       templateId, templateVersionId, namespace, bearerToken)
+                                       templateId, templateVersionId, namespace, delegate_tag, bearerToken)
 
-                pipeline_count = 1
                 for index in range(pipeline_count):
                     setup_data(index)
     except Exception:
@@ -163,7 +164,7 @@ def create_pipeline_template(hostname, identifier, versionId, accountId, orgId, 
         print("Pipeline template created as part of test data failed")
         utils.print_error_log(response)
 
-def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId, templateId, templateVersionId, namespace, bearerToken):
+def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, githubConnId, k8sConnId, dockerConnId, templateId, templateVersionId, namespace, delegate_tag, bearerToken):
     with open(getPath('resources/NG/pipeline/ci/pipeline_step1_step2_infra_payload.yaml'), 'r+') as f:
         # Updating the Json File
         pipelineData = yaml.load(f, Loader=yaml.FullLoader)
@@ -178,7 +179,8 @@ def create_ci_pipeline(hostname, identifier, accountId, orgId, projectId, github
         "templateRef": templateId,
         "versionLabel": templateVersionId,
         "k8sConnectorRef": k8sConnId,
-        "namespace": namespace
+        "namespace": namespace,
+        "delegate": delegate_tag
     }
     url = "/pipeline/api/pipelines/v2?accountIdentifier=" + accountId + "&projectIdentifier=" + projectId + "&orgIdentifier=" + orgId + "&storeType=INLINE"
     response = pipeline.postPipelineWithYamlPayload(hostname, payload, dataMap, url, bearerToken)
@@ -225,7 +227,7 @@ class CI_PIPELINE_RUN(SequentialTaskSet):
         global deployment_count
         deployment_count += 1
         if deployment_count <= deployment_count_needed:
-            id = "perf_pipeline_" + uniqueId + str(random.randint(0, 14))
+            id = "perf_pipeline_" + uniqueId + str(random.randint(0, (pipeline_count-1)))
             with open(getPath('resources/NG/pipeline/inputs_codebase.yaml'), 'r+') as f:
                 # Updating the Json File
                 pipelineData = yaml.load(f, Loader=yaml.FullLoader)

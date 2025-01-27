@@ -4,6 +4,8 @@ pipeline:
   projectIdentifier: $projectIdentifier
   orgIdentifier: $orgIdentifier
   tags: {}
+  delegateSelectors:
+    - $delegate
   properties:
     ci:
       codebase:
@@ -15,6 +17,8 @@ pipeline:
         identifier: Stage1
         description: ""
         type: CI
+        strategy:
+          parallelism: 1
         spec:
           cloneCodebase: true
           execution:
@@ -32,8 +36,11 @@ pipeline:
                     command: |-
                       sleep 100
                       export abc=xyz
+                      echo "text secret is: " <+secrets.getValue("account.user0")>
+                      echo "abc"
                     outputVariables:
                       - name: abc
+                    imagePullPolicy: IfNotPresent
                     resources:
                       limits:
                         memory: 10M

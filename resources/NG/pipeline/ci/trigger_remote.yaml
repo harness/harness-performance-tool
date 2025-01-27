@@ -9,6 +9,8 @@ trigger:
   stagesToExecute: []
   projectIdentifier: $projectIdentifier
   pipelineIdentifier: $pipelineIdentifier
+  delegateSelectors:
+    - $delegate
   source:
     type: Webhook
     spec:

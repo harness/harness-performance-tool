@@ -3,6 +3,8 @@ inputSet:
   identifier: $identifier
   orgIdentifier: $orgIdentifier
   projectIdentifier: $projectIdentifier
+  delegateSelectors:
+    - $delegate
   pipeline:
     identifier: $pipelineIdentifier
     properties:
