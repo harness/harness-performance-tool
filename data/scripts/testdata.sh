@@ -9,9 +9,7 @@ repoUserIds=("<userId1>" "<userId2>") # repo user id
 repoTokens=("<token1>" "<token2>") # repo user token - https://github.com/settings/tokens
 repoUrl=<repoUrl> # https://github.com/../repoName
 repoBranchName=<branchName> # main
-k8sNamespace=<namespace> # default
-organizationCount=<count> # 5
-projectCount=<count> # 2 (per organization)
+k8sNamespace=<namespace> # default - namespace to host build pods
 
 
 ### ------ cd input variables BEGIN ------ 
