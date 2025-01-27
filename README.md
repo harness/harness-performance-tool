@@ -82,7 +82,7 @@ CD - [CD_PIPELINE_WEBHOOK_RUN](./locust_tasks/cd_pipeline_webhook_run.py)
 4. Update locust master ip to '0.0.0.0' in [variables.sh](./variables.sh)
 5. Execute > ```locust -f locust_tasks/tasks```  
 
-**Note:** If run into SSL/TLS verification error append SMP certificates to python cacert.pem file.  
+**Note:** If run into SSL/TLS verification error append certificates to python cacert.pem file.  
 Locate cacert.pem file via terminal  
 `python -c "import certifi; print(certifi.where())"`   
 
@@ -93,7 +93,7 @@ Locate cacert.pem file via terminal
 4. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
 5. Execute [install.sh](./install.sh) under cloned directory `./install.sh`  
 
-**Note:** If run into SSL/TLS verification error add SMP certificates to [smp_certificates.pem](./smp_certifcates.pem) and run [install.sh](./install.sh) again
+**Note:** If run into SSL/TLS verification error add certificates to [smp_certificates.pem](./smp_certifcates.pem) and run [install.sh](./install.sh) again
 
 ### [Test Execution](#)
 
