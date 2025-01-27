@@ -21,56 +21,56 @@ This document outlines all the necessary details required for:
 ### Quick overview
 [locust_setup_run.mov](https://drive.google.com/file/d/1oU9r0_IBOs908D0YmpRUrCzW9EqmR_hV/view)
 
-### [Project structure](#)
-- data : contains harness username list
-- kubernetes-config : locust master and worker deployment yaml
-- locust_tasks : test scripts and api helpers
-- resources : request payload files
-- locust_tasks > tasks.py : execution starting point and all the test scripts have to be imported here
+### [Run Existing Pipeline](#)
 
-### [Test data setup](#)
+If there is CI/CD pipeline already available and you would like to just run it 'n' times repeatedly.  
+Perform following:
+- Add Harness user credentials in [credentials.csv](./data/on-prem/credentials.csv)
+- [Setup Locust](#locust-installation)
+- [Execute Test](#test-execution) with [Test Scenario](#test-scripts-scenarios) [TRIGGER_PIPELINE]
 
-#### 1. Add new users in account for test runs
-Add users into Harness account with random password and list them in [credentials.csv](./data/on-prem/credentials.csv)
+
+### [Test data setup to generate pipelines during test run](#)
+
+#### Add Harness users for test runs
+Add new users into Harness account and list them in [credentials.csv](./data/on-prem/credentials.csv)  
 These credentials will be used during test runs for performing authentication
 
 > eg: auto_perf_1597@mailinator.com:Test@123
 
-#### Multiple users can be added to Harness by following the below steps.
+#### Generate Harness users in bulk
 
-Step1: Run mongo query to add admin user into harness User group user. Replace the username with valid email who is part of account admin in the account. This user should be used to provision the users in step2
+`#1` Run mongo query to add user (admin role) into harness User group user.  
+Replace the username with harness user of type : account admin.  
+This user will be used to provision the new users in step2.
 
-       db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>"})})
+`db.harnessUserGroups.insertOne({'name':'readOnly','memberIds':db.users.distinct('_id',{email:"<username>"})})`
 
-Step2: Execute script [user_provision.sh](./data/scripts/user_provision.sh) (update the inputs and run)
+`#2` Execute script [user_provision.sh](./data/scripts/user_provision.sh)
 
-       	url=http://<ip> : ip address or complete URL of Harness .
-       	username=<username> # user email should be same as user used in Step1.
-       	password=<password> # Password of the user.
-            userCount=1   # No of users needs to be provisioned.
-       	new_email_id_prefix="harness_perftest_"  # Prefix for new users.
-       	new_email_id_domain="@test.com"	 # email domain for the new user.
-       	new_user_password="random_password" # any random password. we are keeping the same password for all the users.
+#### CI / CD pipelines (test) would need github repo details to perform git clone and pull manifest
+- repo userIds
+- repo tokens
+- repo url
+- repo branch name
+- kubernetes namespace (to host build | deployment pods)  
+Input data and execute [testdata.sh](./data/scripts/testdata.sh)
 
-#### 2. Add github userIds and tokens as Harness secrets (via below script)
-#### 3. Add github repo url, branch name as Harness variable (via below script)
-Required to perform git clone and push Harness pipeline yaml
+#### Populate Harness data (optional)
+Input count of entities required and execute [platform_data.sh](./data/scripts/platform_data.sh)  
+eg: Add 'x' organisations and 'y' projects in each organisation in Harness account
 
-#### 4. Add kubernetes cluster namespace as Harness variable (via below script)
-Namespace in which build pods are created while running pipelines
+#### Install delegate in Harness account with tag : perf-delegate
 
-#### 5. Populate Harness data (via below script)
-Add 100 organisations and 20 projects in each organisation to populate some data in Harness account
+### [Test execution via webhook triggers](#)
+##### In order to support higher pipeline concurrency run via webhook
+CI - [CI_PIPELINE_WEBHOOK_RUN](./locust_tasks/ci_pipeline_webhook_run.py)  
+- update webhook payload on [ci_webhook_payload.json](./resources/NG/pipeline/ci/ci_webhook_payload.json)  
 
-Above 2, 3, 4 can be added using script [testdata.sh](./data/scripts/testdata.sh)  
-**Imp:** Change inputs in script to valid values and EXECUTE
+CD - [CD_PIPELINE_WEBHOOK_RUN](./locust_tasks/cd_pipeline_webhook_run.py)  
+- update webhook payload on [cd_webhook_payload.json](./resources/NG/pipeline/cd/cd_webhook_payload.json)  
 
-#### 6. Add delegate in Harness account with tag : perf-delegate
-
-#### 7. Test execution via webhook triggers
-For test class - [CI_PIPELINE_WEBHOOK_RUN](./locust_tasks/ci_pipeline_webhook_run.py) update webhook payload on [ci_webhook_payload.json](./resources/NG/pipeline/ci/ci_webhook_payload.json)  
-For test class - [CD_PIPELINE_WEBHOOK_RUN](./locust_tasks/cd_pipeline_webhook_run.py) update webhook payload on [cd_webhook_payload.json](./resources/NG/pipeline/cd/cd_webhook_payload.json)  
-**Note:** Make sure to include {"zen": "$zen"} inside webhook payload
+**Note:** Make sure to include {"zen": "$zen"} inside webhook payload which is required to match the Harness pipeline triggers to execute
 
 
 ### [Locust installation](#)
@@ -78,19 +78,22 @@ For test class - [CD_PIPELINE_WEBHOOK_RUN](./locust_tasks/cd_pipeline_webhook_ru
 #### Set up Locust on local machine
 1. Install python3 ```brew install python3 ```  
 2. Install Locust > ```pip3 install locust```
-3. Append SMP certificates to python cacert.pem file  
-   a. locate cacert.pem file via terminal `python -c "import certifi; print(certifi.where())"`   
-4. Git clone
-5. Update locust master ip to '0.0.0.0' in [variables.sh](./variables.sh)
-6. Execute > ```locust -f locust_tasks/tasks```
+3. Git clone
+4. Update locust master ip to '0.0.0.0' in [variables.sh](./variables.sh)
+5. Execute > ```locust -f locust_tasks/tasks```  
+
+**Note:** If run into SSL/TLS verification error append certificates to python cacert.pem file.  
+Locate cacert.pem file via terminal  
+`python -c "import certifi; print(certifi.where())"`   
 
 #### Set up Locust on GCP cluster  
 1. Git clone
 2. Connect to GCP cluster
 3. Procure static IP address
-4. Add SMP certificates to [smp_certificates.pem](./smp_certifcates.pem)
-5. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
-5. Execute [install.sh](./install.sh) under cloned directory `./install.sh`
+4. Update GCP project, cluster namespace and locust master ip (static ip) in [variables.sh](./variables.sh)
+5. Execute [install.sh](./install.sh) under cloned directory `./install.sh`  
+
+**Note:** If run into SSL/TLS verification error add certificates to [smp_certificates.pem](./smp_certifcates.pem) and run [install.sh](./install.sh) again
 
 ### [Test Execution](#)
 
@@ -114,8 +117,9 @@ Test scenario : Test class to execute
 eg: CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE (single or comma separated class names)
 
 Pipeline url (optional) : Pipeline url to execute ‘n’ times 
-eg: http://<ip_address>/ng/account/DbSRs-u5QgukRP_ODtvGkw/ci/orgs/default/projects/ScaleTestPOC/pipelines/CITest/pipeline-studio/?storeType=INLINE
-Pick pipeline link from Harness UI Left menu > Builds > Select Project > Click Pipelines on left > Click on pipeline name
+eg: https://<ip_address>/ng/account/EuVfUT4wTfqIYugqfpssQw/all/orgs/default/projects/ScaleTestPOC/pipelines/Test/pipeline-studio?storeType=INLINE  
+
+Pick pipeline link from Harness UI > Select project from left menu > Pipelines > Click on pipeline name
 
 Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
 
@@ -160,11 +164,18 @@ Navigate to locust server URL while tests are running to view real time metrics
 
 | Scenario                               | Pre-requisite data                                                                                                                                                                                                                                                                                                                                                                                                             | Locust params                                                                                                                                         | Comments                                                                                                                                                       |
 |:---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Execute CI pipeline 'n' times          | Create Organization, project, connectors, <br/>step template and pipeline                                                                                                                                                                                                                                                                                                                                                      | Test scenario : CI_PIPELINE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : 10                                                            |                                                                                                                                                                |
-| Execute CI pipeline 'n' times (gitX)   | Create Organization, project, 15 github code repo connectors, 15 gitX <br/>(step template, stage template, pipelines, pipeline input set, pipeline triggers) <br/> <br/>Manual steps :<br/> 1. Add Harness pipeline trigger <br/>2. Get webhook payload under github repo <br/>3. Add one property {"zen": "$zen"} in webhook payload <br/>4. Replace webhook payload in resources/NG/pipeline/ci/ci_webhook_payload.json file | Test scenario : CI_PIPELINE_REMOTE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : 10                                                     | Pipeline is triggered via webhook and each pipeline_execution_count triggers 15 pipelines <br/> <br/>To execute 1500 pipelines - set pipeline_execution_count = 100 |
-| SAVE - GET - UPDATE CI pipeline        | Create Organization, project, 15 github connectors, pipeline template                                                                                                                                                                                                                                                                                                                                                          | Test scenario : CI_PIPELINE_SAVE<br/> Pipeline url: blank<br/>Pipeline execution count : 0                                                            |                                                            ‘n’ users will Save - Get - Update CI pipeline concurrently and repeat until duration                                                                                                    | 
-| SAVE - GET - UPDATE CI pipeline (gitX) | Create Organization, project, 15 github connectors, 15 gitX step template, <br/>15 gitX stage templates                                                                                                                                                                                                                                                                                                                        | Test scenario : CI_PIPELINE_REMOTE_SAVE<br/> Pipeline url: blank<br/>Pipeline execution count : 0                                                     |                                                 ‘n’ users will Save - Get - Update gitX CI pipeline concurrently and repeat until duration                                                                                                               |
-| Trigger pipeline or webhook 'n' times  | Find pipeline link - Open Harness left nav -> Builds -> Select project -> <br/>Click on pipelines -> Click on pipeline name -> copy pipeline url<br/><br/> eg: http://<ip_address>/ng/account/DbSRs-u5QgukRP_ODtvGkw/ci/orgs/default<br/>/projects/ScaleTestPOC/pipelines/CITest/pipeline-studio/?storeType=INLINE                                                                                                             | Test scenario : TRIGGER_PIPELINE<br/> Pipeline url: <URL><br/>Pipeline execution count : 10                                                           |                                                                                                                                                                |
+| TRIGGER_PIPELINE<br/> Trigger pipeline or webhook 'n' times  | Find pipeline link - Open Harness left nav -> Builds -> Select project -> <br/>Click on pipelines -> Click on pipeline name -> copy pipeline url<br/><br/> eg: http://<ip_address>/ng/account/DbSRs-u5QgukRP_ODtvGkw/ci/orgs/default<br/>/projects/ScaleTestPOC/pipelines/CITest/pipeline-studio/?storeType=INLINE                                                                                                             | Test scenario : TRIGGER_PIPELINE<br/> Pipeline url: <URL><br/>Pipeline execution count : 10                                                           |                                                                                                                                                                |
+| CI_PIPELINE_RUN<br/> Execute CI pipeline 'n' times          | Create Organization, project, connectors, <br/>step template and pipeline                                                                                                                                                                                                                                                                                                                                                      | Test scenario : CI_PIPELINE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : 10                                                            |                                                                                                                                                                |
+| CD_PIPELINE_RUN<br/> Execute CD pipeline 'n' times          | Create Organization, project, K8s service, env, infra, connectors, pipeline                                                                                                                                                                                                                                                                                                                                                    | Test scenario : CD_PIPELINE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : n                                                            |                                                                                                                                                                |
+| CI_PIPELINE_REMOTE_RUN<br/> Execute CI pipeline 'n' times (gitX)   | Create Organization, project, 15 github code repo connectors, 15 gitX <br/>(step template, stage template, pipelines, pipeline input set, pipeline triggers) <br/> <br/>Manual steps :<br/> 1. Add Harness pipeline trigger <br/>2. Get webhook payload under github repo <br/>3. Add one property {"zen": "$zen"} in webhook payload <br/>4. Replace webhook payload in resources/NG/pipeline/ci/ci_webhook_payload.json file | Test scenario : CI_PIPELINE_REMOTE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : 10                                                     | Pipeline is triggered via webhook and each pipeline_execution_count triggers 15 pipelines <br/> <br/>To execute 1500 pipelines - set pipeline_execution_count = 100 |
+| CI_PIPELINE_SAVE<br/> SAVE - GET - UPDATE CI pipeline        | Create Organization, project, 15 github connectors, pipeline template                                                                                                                                                                                                                                                                                                                                                          | Test scenario : CI_PIPELINE_SAVE<br/> Pipeline url: blank<br/>Pipeline execution count : 0                                                            |                                                            ‘n’ users will Save - Get - Update CI pipeline concurrently and repeat until duration                                                                                                    | 
+| CI_PIPELINE_REMOTE_SAVE<br/> SAVE - GET - UPDATE CI pipeline (gitX) | Create Organization, project, 15 github connectors, 15 gitX step template, <br/>15 gitX stage templates                                                                                                                                                                                                                                                                                                                        | Test scenario : CI_PIPELINE_REMOTE_SAVE<br/> Pipeline url: blank<br/>Pipeline execution count : 0                                                     |                                                 ‘n’ users will Save - Get - Update gitX CI pipeline concurrently and repeat until duration                                                                                                               |
 | User behaviour under steady load       | Create Organizations, projects, connectors, 200 pipeline and execute them                                                                                                                                                                                                                                                                                                                                                      | Test scenario : CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE,<br/>CI_UPDATE_PIPELINE,CI_VIEW_EXECUTION<br/> Pipeline url: blank<br/>Pipeline execution count : 0 |                                                                                                                                                                |
-| Execute CD pipeline 'n' times          | Create Organization, project, K8s service, env, infra, connectors, pipeline                                                                                                                                                                                                                                                                                                                                                    | Test scenario : CD_PIPELINE_RUN<br/> Pipeline url: blank<br/>Pipeline execution count : n                                                            |                                                                                                                                                                |
  
+
+### [Project structure](#)
+- data : contains harness username list
+- kubernetes-config : locust master and worker deployment yaml
+- locust_tasks : test scripts and api helpers
+- resources : request payload files
+- locust_tasks > tasks.py : execution starting point and all the test scripts have to be imported here

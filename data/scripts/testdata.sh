@@ -9,26 +9,20 @@ repoUserIds=("<userId1>" "<userId2>") # repo user id
 repoTokens=("<token1>" "<token2>") # repo user token - https://github.com/settings/tokens
 repoUrl=<repoUrl> # https://github.com/../repoName
 repoBranchName=<branchName> # main
-k8sNamespace=<namespace> # default
-organizationCount=<count> # 5
-projectCount=<count> # 2 (per organization)
+k8sNamespace=<namespace> # default - namespace to host build pods
 
 
 ### ------ cd input variables BEGIN ------ 
 # k8s manifest details
 manifestRepoUrl=<manifestRepoUrl>
 manifestRepoCommitId=<manifestRepoCommitId>
-k8sClusterUrl=<k8sClusterUrl>
 
 # ecr artifact details
 awsRegion=<awsRegion>
 awsArtifactImage=<awsArtifactImage>
 awsArtifactTag=<awsArtifactTag>
 
-cdDelegateSelector="perf-delegate"
-
 # secrets
-k8ssatoken=<k8ssatoken>
 awsaccesskey=<awsaccesskey>
 awssecretkey=<awssecretkey>
 
@@ -45,56 +39,7 @@ LOGIN_RESULT=$(curl --location "$url/gateway/api/users/login" \
 accountId=(`echo ${LOGIN_RESULT} | grep -o '"defaultAccountId":"[^"]*' | cut -d : -f2 | cut -d "\"" -f2`)
 token=(`echo ${LOGIN_RESULT} | grep -o '"token":"[^"]*' | cut -d : -f2 | cut -d "\"" -f2`)
 
- 
-# Create Organizations and projects
- 
-orgUrl="$url/gateway/ng/api/organizations?accountIdentifier=$accountId"
-projectUrl="$url/gateway/ng/api/projects?routingId=$accountId&accountIdentifier=$accountId&orgIdentifier="
- 
-for ((index = 1; index <= $organizationCount; index++)); do
-    orgName="harness_organization_${index}"
- 
-    json_data='{
-    "organization": {
-        "name": "'"${orgName}"'",
-        "description": "",
-        "identifier": "'"${orgName}"'",
-        "tags": {} } }'
- 
-    response=$(curl --location --request POST "$orgUrl" \
-    --header "authorization: Bearer $token" \
-    --header "content-type: application/json" \
-    --data-raw "$json_data")
- 
-    echo "\\n# adding harness_organization_$index"
-    echo "$response\\n"
- 
-    projectFinal="${projectUrl}${orgName}"
-    for ((projectIndex = 1; $projectIndex <= $projectCount; projectIndex++)); do
-        projectName="harness_project_${projectIndex}"
-        json_data_project='{
-        "project": {
-            "name": "'"${projectName}"'",
-            "orgIdentifier": "'"${orgName}"'",
-            "color": "#0063f7",
-            "description": "",
-            "identifier": "'"${projectName}"'",
-            "tags": {},
-            "modules": [] } }'
-    
-        projectResponse=$(curl --location --request POST "$projectFinal" \
-                --header "authorization: Bearer $token" \
-                --header "content-type: application/json" \
-                --data-raw "$json_data_project")
-        
-        echo "\\n# adding harness_project_$projectIndex in harness_organization_$index"
-        echo "$projectResponse\\n"
-    done
- 
-done
- 
- 
- 
+
 # add github repository user id as harness secret
 for index in "${!repoUserIds[@]}"; do
     userId="${repoUserIds[$index]}"
@@ -216,28 +161,6 @@ echo "$response\\n"
 
 # ---------BEGIN: Create CD secrets and variables-----------------
 
-# create k8s cluster SA token account level secret
-response=$(curl --location "$url/gateway/ng/api/v2/secrets?routingId=$accountId&accountIdentifier=$accountId" \
---header "Authorization: Bearer $token" \
---header "content-type: application/json" \
---data '{
-    "secret": {
-        "type": "SecretText",
-        "name": "k8ssatoken",
-        "identifier": "k8ssatoken",
-        "description": "",
-        "tags": {},
-        "spec": {
-            "value": "'$k8ssatoken'",
-            "secretManagerIdentifier": "harnessSecretManager",
-            "valueType": "Inline"
-        }
-    }
-}')
-
-echo "\\n# adding k8s cluster SA token as harness secret : k8ssatoken"
-echo "$response\\n"
-
 
 # create AWS secret key secret
 response=$(curl --location "$url/gateway/ng/api/v2/secrets?routingId=$accountId&accountIdentifier=$accountId" \
@@ -332,27 +255,6 @@ response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountI
 --header "content-type: application/json" \
 --data '{
     "variable": {
-        "name": "k8sClusterUrl",
-        "identifier": "k8sClusterUrl",
-        "description": "",
-        "type": "String",
-        "spec": {
-            "valueType": "FIXED",
-            "fixedValue": "'$k8sClusterUrl'",
-            "allowedValues": [],
-            "defaultValue": ""
-        }
-    }
-}')
-echo "\\n# adding k8s cluster url as harness variable : k8sClusterUrl"
-echo "$response\\n"
-
-
-response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountId}&accountIdentifier=${accountId}" \
---header "Authorization: Bearer $token" \
---header "content-type: application/json" \
---data '{
-    "variable": {
         "name": "awsRegion",
         "identifier": "awsRegion",
         "description": "",
@@ -408,28 +310,6 @@ response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountI
     }
 }')
 echo "\\n# adding AWS ECR artifact tag as harness variable : awsArtifactTag"
-echo "$response\\n"
-
-
-
-response=$(curl --location "${url}/gateway/ng/api/variables?routingId=${accountId}&accountIdentifier=${accountId}" \
---header "Authorization: Bearer $token" \
---header "content-type: application/json" \
---data '{
-    "variable": {
-        "name": "cdDelegateSelector",
-        "identifier": "cdDelegateSelector",
-        "description": "",
-        "type": "String",
-        "spec": {
-            "valueType": "FIXED",
-            "fixedValue": "'$cdDelegateSelector'",
-            "allowedValues": [],
-            "defaultValue": ""
-        }
-    }
-}')
-echo "\\n# adding CD delegate selector as harness variable : cdDelegateSelector"
 echo "$response\\n"
 
 

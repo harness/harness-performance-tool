@@ -127,7 +127,6 @@ def initiator(environment, **kwargs):
                 awsRegion = get_account_variable(hostname, bearerToken, accountId, 'awsRegion')
                 awsArtifactImage = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactImage')
                 awsArtifactTag = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactTag')
-                delegate_tag = get_account_variable(hostname, bearerToken, accountId, 'cdDelegateSelector')
 
                 connector.createAwsConnector(hostname, bearerToken, accountId, orgId, projectId, awsConnId, awsSecretKeyId,
                                              awsAccessKeyId, awsRegion)

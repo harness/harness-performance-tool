@@ -1,7 +1,9 @@
 
 import base64
 import json
+import sys
 import time
+import gevent
 import requests
 import logging
 from random import choice
@@ -9,7 +11,7 @@ from string import ascii_lowercase
 from locust.exception import StopUser
 from locust_tasks.utilities import utils
 from utilities.utils import getPath
-from locust.runners import STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
+from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust_tasks.helpers.ng import helpers
 from locust import task, SequentialTaskSet, events
 
@@ -22,20 +24,44 @@ def checker(environment):
             environment.runner.quit()
             return
 
+def trigger_pipeline(environment, msg, **kwargs):
+    # Fired when the worker receives a message of type 'trigger_pipeline'
+    global uniqueId
+    uniqueId = msg.data
+
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+    if not isinstance(environment.runner, WorkerRunner):
+        gevent.spawn(checker, environment)
+    if not isinstance(environment.runner, MasterRunner):
+        environment.runner.register_message("trigger_pipeline", trigger_pipeline)
+
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
     environment.runner.state = "TESTDATA SETUP"
     try:
-        global deployment_count_needed
-        deployment_count_needed = environment.parsed_options.pipeline_execution_count
-        global deployment_count
-        deployment_count = 0
-        global pipeline_link
-        pipeline_link = environment.parsed_options.pipeline_url
-        global env
-        env = environment.parsed_options.env
+        testdata_setup = False
+        arr = utils.getTestClasses(environment)
+        for ar in arr:
+            try:
+                getattr(sys.modules[__name__], ar)
+                testdata_setup = True
+            except Exception:
+                pass
+        if testdata_setup == True:
+            global uniqueId
+            uniqueId = "" # uniqueId required to run pipeline with webhook (mandatory)
+            environment.runner.send_message("trigger_pipeline", uniqueId)
+            global deployment_count_needed
+            deployment_count_needed = environment.parsed_options.pipeline_execution_count
+            global deployment_count
+            deployment_count = 0
+            global pipeline_link
+            pipeline_link = environment.parsed_options.pipeline_url
+            global env
+            env = environment.parsed_options.env
 
-        utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
+            utils.init_userid_file(getPath('data/{}/credentials.csv'.format(env)))
     except Exception:
         logging.exception("Exception occurred while generating test data for TRIGGER_PIPELINE")
         utils.stopLocustTests()
@@ -77,37 +103,23 @@ class TRIGGER_PIPELINE(SequentialTaskSet):
         self.authentication()
 
     @task
-    def executionChecker(self):
-        global deployment_count
-        if deployment_count >= deployment_count_needed:
-            print('Deployment Count Reached, hence its Perf test is gonna be stopped')
-            headers = {'Connection': 'keep-alive'}
-            stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
-            if stopResponse.status_code == 200:
-                print('Perf Test has been stopped')
-                self.interrupt()
-            else:
-                print('Alarm Perf Tests are still running')
-                print(stopResponse.content)
-
-    @task
     def createRandomString(self):
         self.randomString = ''.join(choice(ascii_lowercase) for i in range(3))
 
     @task
     def triggerPipeline(self):
         global deployment_count
-        if deployment_count < deployment_count_needed:
+        deployment_count += 1
+        if deployment_count <= deployment_count_needed:
             if '/api/webhook' not in pipeline_link:
                 response = helpers.triggerPipelineWithoutPayload(self, self.pipelineIdentifier, self.projectName,
                                                                    self.orgName,
                                                                    self.moduleName, self.accountId, self.bearerToken)
             else:
-                response = helpers.triggerWithWebHook(self, self.accountId, "c9ac29dd17eb47328a5c2c446fb48623")
+                response = helpers.triggerWithWebHook(self, self.accountId, uniqueId)
 
             if response.status_code == 200:
                 print('Pipeline is triggered successfully ')
-                deployment_count += 1
                 if deployment_count >= deployment_count_needed:
                     print('Deployment Count Reached, hence its Perf test is gonna be stopped')
                     headers = {'Connection': 'keep-alive'}

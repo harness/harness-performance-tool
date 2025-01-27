@@ -82,12 +82,15 @@ def initiator(environment, **kwargs):
             global infraId
             global k8sConnId
             global delegate_tag
+            delegate_tag = 'perf-delegate'
 
             global awsRegion
             global awsArtifactImage
             global awsArtifactTag
             global manifestRepoUrl
             global manifestRepoCommitId
+            global pipeline_count
+            pipeline_count = 1
 
             projectId = "perf_project"
             awsSecretKeyId = "account.awssecretkey"  # secret should be present already on account level
@@ -123,11 +126,10 @@ def initiator(environment, **kwargs):
                 awsRegion = get_account_variable(hostname, bearerToken, accountId, 'awsRegion')
                 awsArtifactImage = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactImage')
                 awsArtifactTag = get_account_variable(hostname, bearerToken, accountId, 'awsArtifactTag')
-                delegate_tag = get_account_variable(hostname, bearerToken, accountId, 'cdDelegateSelector')
 
                 connector.createAwsConnector(hostname, bearerToken, accountId, orgId, projectId, awsConnId, awsSecretKeyId,
                                              awsAccessKeyId, awsRegion)
-                for index in range(15):
+                for index in range(pipeline_count):
                     create_github_connector(hostname, bearerToken, accountId, orgId, projectId, manifestRepoUrl, index)
 
                 response = service.createK8sSvcWithRuntimeGHConnectorAndEcrConnector(hostname, accountId, orgId, projectId,
@@ -233,47 +235,32 @@ class CD_PIPELINE_RUN(SequentialTaskSet):
     @task
     def setup_data(self):
         self.orgId = "auto_cd_k8s_org_" + uniqueId
-        self.pipelineId = "perf_pipeline_" + uniqueId + "0"
-
-    @task
-    def execution_gate(self):
-        global deployment_count
-        if deployment_count >= deployment_count_needed:
-            print('Deployment Count Reached, hence its Perf test is gonna be stopped')
-            headers = {'Connection': 'keep-alive'}
-            stopResponse = requests.get(utils.getLocustMasterUrl() + '/stop', headers=headers)
-            if stopResponse.status_code == 200:
-                print('Perf Test has been stopped')
-                self.interrupt()
-            else:
-                print('Alarm Perf Tests are still running')
-                print(stopResponse.content)
 
     @task
     def trigger_pipeline(self):
         global deployment_count
-        # execute CD pipeline
-        if deployment_count < deployment_count_needed:
+        deployment_count += 1
+        if deployment_count <= deployment_count_needed:
+            id = "perf_pipeline_" + uniqueId + str(random.randint(0, (pipeline_count-1)))
             with open(getPath('resources/NG/pipeline/inputs_cd_k8s_canary_payload.yaml'), 'r+') as f:
                 # Updating the Json File
                 pipelineData = yaml.load(f, Loader=yaml.FullLoader)
                 payload = str(yaml.dump(pipelineData, default_flow_style=False))
                 f.truncate()
-            github_random_connector = "perf_github_connector_" + str(random.randint(0, 14))
+            github_random_connector = "perf_github_connector_" + str(random.randint(0, (pipeline_count-1)))
             dataMap = {
-                "pipelineId": self.pipelineId,
+                "pipelineId": id,
                 "manifestConnectorRef": github_random_connector
             }
             if dataMap is not None:
                 for key in dataMap:
                     if key is not None:
                         payload = payload.replace('$' + key, dataMap[key])
-            response = helpers.triggerPipeline(self, self.pipelineId, projectId, self.orgId, "cd",
+            response = helpers.triggerPipeline(self, id, projectId, self.orgId, "cd",
                                                self.accountId, self.bearerToken, payload)
 
             if response.status_code == 200:
                 logging.info('Pipeline is triggered successfully ')
-                deployment_count += 1
                 if deployment_count >= deployment_count_needed:
                     logging.info('Deployment Count Reached, hence its Perf test is gonna be stopped')
                     headers = {'Connection': 'keep-alive'}
