@@ -29,11 +29,13 @@ def getBearerToken(obj, base64UsernamePassword):
         return str(json_resp['resource']['token'])
     return None
 
-def getAccountInfo(obj, base64UsernamePassword):
+def getAccountInfo(obj, base64UsernamePassword, authMechanism):
     payload = {"authorization": base64UsernamePassword}
     # print(payload)
     headers = {'Content-Type': 'application/json'}
     uri = '/api/users/login'
+    if authMechanism.lower() == "local-login":
+        uri = '/gateway/api/users/harness-local-login'
     if type(obj) == str:
         response = requests.post(obj + uri, data=json.dumps(payload), headers=headers)
     else:

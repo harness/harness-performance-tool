@@ -43,6 +43,7 @@ def _(parser):
     parser.add_argument("--pipeline-url", type=str, default="", help="optional")
     parser.add_argument("--pipeline-execution-count", type=int, default=0, help="optional")
     parser.add_argument("--env", type=str, include_in_web_ui=False, default="on-prem", help="eg: on-prem")
+    parser.add_argument("--auth-mechanism", type=str, default="Harness", help="Harness | Local-Login")
 
 class UserBehavior(HttpUser):
     def on_start(self):
