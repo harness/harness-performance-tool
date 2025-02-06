@@ -49,6 +49,8 @@ def on_locust_init(environment, **_kwargs):
 @events.test_start.add_listener
 def initiator(environment, **kwargs):
     environment.runner.state = "TESTDATA SETUP"
+    global auth_mechanism
+    auth_mechanism = environment.parsed_options.auth_mechanism
     try:
         testdata_setup = False
         arr = utils.getTestClasses(environment)
@@ -106,7 +108,7 @@ def initiator(environment, **kwargs):
             c = creds[0] + ':' + creds[1]
             en = base64.b64encode(c.encode('ascii'))
             base64UsernamePassword = 'Basic ' + en.decode('ascii')
-            json_response = authentication.getAccountInfo(hostname, base64UsernamePassword)
+            json_response = authentication.getAccountInfo(hostname, base64UsernamePassword, auth_mechanism)
             bearerToken = json_response['resource']['token']
             accountId = json_response['resource']['defaultAccountId']
 
@@ -214,6 +216,8 @@ class CD_PIPELINE_RUN(SequentialTaskSet):
         payload = {"authorization": 'Basic ' + en.decode('ascii')}
         headers = {'Content-Type': 'application/json'}
         uri = '/api/users/login'
+        if auth_mechanism.lower() == "local-login":
+            uri = '/gateway/api/users/harness-local-login'
         print("logging with :: " + creds[0])
         response = self.client.post(uri, data=json.dumps(payload), headers=headers, name="LOGIN - " + uri)
         if response.status_code != 200:
