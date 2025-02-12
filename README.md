@@ -123,6 +123,10 @@ Pick pipeline link from Harness UI > Select project from left menu > Pipelines >
 
 Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
 
+Auth mechanism : 
+1. Harness : If username/password authentication is confiugured on account (default)
+2. Local-Login : If SSO authentication is configured on account, Local-Login will be used for making requests in tests
+
 ```
 ![](./docs/img/locust_params.png)
 
