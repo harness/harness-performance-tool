@@ -7,7 +7,7 @@ import yaml
 import base64
 import logging
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
-from locust import task, constant_pacing, SequentialTaskSet, events
+from locust import task, constant_pacing, SequentialTaskSet, events, constant_throughput
 from locust.runners import WorkerRunner
 from locust_tasks.helpers.ng import account, organization, project, resourcegroup, \
     role, smtp, user, usergroup, gitsync, dashboard, connector, secret, pipeline, ti, log_service, \
@@ -50,6 +50,8 @@ def initiator(environment, **kwargs):
     environment.runner.state = "TESTDATA SETUP"
     global auth_mechanism
     auth_mechanism = environment.parsed_options.auth_mechanism
+    global rps
+    rps = float(environment.parsed_options.rps)
     try:
         testdata_setup = False
         arr = utils.getTestClasses(environment)
@@ -262,7 +264,15 @@ def create_ci_trigger_remote(hostname, identifier, accountId, orgId, projectId, 
 # Trigger pipeline added above 'deployment_count_needed' times
 class CI_PIPELINE_REMOTE_RUN(SequentialTaskSet):
     def data_initiator(self):
-        self.__class__.wait_time = constant_pacing(1 // 1)
+        try:
+            if rps > 0:
+                print(f"Current RPS requested per user : {rps}")
+                self.__class__.wait_time = constant_throughput(rps)
+            else:
+                if hasattr(self.__class__, 'wait_time'):
+                    del self.__class__.wait_time
+        except AttributeError:
+            pass
 
     def authentication(self):
         creds = next(utils.userid_list)[0].split(':')
@@ -279,7 +289,7 @@ class CI_PIPELINE_REMOTE_RUN(SequentialTaskSet):
             print("Login request failure..")
             print(f"{response.request.url} {payload} {response.status_code} {response.content}")
             print("--------------------------")
-            raise StopUser()
+            utils.stopLocustTests()
         else:
             resp = response.content
             json_resp = json.loads(resp)
@@ -295,7 +305,7 @@ class CI_PIPELINE_REMOTE_RUN(SequentialTaskSet):
     def triggerPipeline(self):
         global deployment_count
         deployment_count += 1
-        if deployment_count < deployment_count_needed:
+        if deployment_count <= deployment_count_needed:
             response = helpers.triggerWithWebHook(self, accountId, uniqueId)
 
             if response.status_code == 200:

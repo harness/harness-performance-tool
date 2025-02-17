@@ -75,9 +75,15 @@ def initiator(environment, **kwargs):
 class TRIGGER_PIPELINE(SequentialTaskSet):
 
     def data_initiator(self):
-        if rps != 0:
-            print(f"Current RPS requested per user : {rps}")
-            self.__class__.wait_time = constant_throughput(rps)
+        try:
+            if rps > 0:
+                print(f"Current RPS requested per user : {rps}")
+                self.__class__.wait_time = constant_throughput(rps)
+            else:
+                if hasattr(self.__class__, 'wait_time'):
+                    del self.__class__.wait_time
+        except AttributeError:
+            pass
         self.pipeline_comps = pipeline_link.split('/')
 
         if '/api/webhook' not in pipeline_link:
@@ -101,7 +107,7 @@ class TRIGGER_PIPELINE(SequentialTaskSet):
             print("Login request failure..")
             print(f"{response.request.url} {payload} {response.status_code} {response.content}")
             print("--------------------------")
-            raise StopUser()
+            utils.stopLocustTests()
         else:
             resp = response.content
             json_resp = json.loads(resp)

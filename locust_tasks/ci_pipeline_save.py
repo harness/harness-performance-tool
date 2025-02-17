@@ -180,7 +180,7 @@ class CI_PIPELINE_SAVE(SequentialTaskSet):
             print("Login request failure..")
             print(f"{response.request.url} {payload} {response.status_code} {response.content}")
             print("--------------------------")
-            raise StopUser()
+            utils.stopLocustTests()
         else:
             resp = response.content
             json_resp = json.loads(resp)

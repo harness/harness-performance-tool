@@ -22,7 +22,7 @@ def getBearerToken(obj, base64UsernamePassword):
     if response.status_code != 200:
         print(response.url)
         print(response.content)
-        raise StopUser()
+        utils.stopLocustTests()
     else:
         resp = response.content
         json_resp = json.loads(resp)
@@ -45,7 +45,7 @@ def getAccountInfo(obj, base64UsernamePassword, authMechanism):
         print(response.url)
         print(payload)
         print(response.content)
-        raise StopUser()
+        utils.stopLocustTests()
     else:
         resp = response.content
         return json.loads(resp)

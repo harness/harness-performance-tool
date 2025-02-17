@@ -8,7 +8,7 @@ import time
 import gevent
 import yaml
 import requests
-from locust import task, constant_pacing, SequentialTaskSet, events
+from locust import task, constant_pacing, SequentialTaskSet, events, constant_throughput
 from locust.exception import StopUser
 from locust.runners import LocalRunner, MasterRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust.runners import WorkerRunner
@@ -51,6 +51,8 @@ def initiator(environment, **kwargs):
     environment.runner.state = "TESTDATA SETUP"
     global auth_mechanism
     auth_mechanism = environment.parsed_options.auth_mechanism
+    global rps
+    rps = float(environment.parsed_options.rps)
     try:
         testdata_setup = False
         arr = utils.getTestClasses(environment)
@@ -207,7 +209,15 @@ def create_k8s_pipeline(hostname, accountId, orgId, projectId, pipeline_id, serv
 
 class CD_PIPELINE_RUN(SequentialTaskSet):
     def data_initiator(self):
-        self.__class__.wait_time = constant_pacing(1)
+        try:
+            if rps > 0:
+                print(f"Current RPS requested per user : {rps}")
+                self.__class__.wait_time = constant_throughput(rps)
+            else:
+                if hasattr(self.__class__, 'wait_time'):
+                    del self.__class__.wait_time
+        except AttributeError:
+            pass
 
     def authentication(self):
         creds = next(utils.userid_list)[0].split(':')
@@ -224,7 +234,7 @@ class CD_PIPELINE_RUN(SequentialTaskSet):
             print("Login request failure..")
             print(f"{response.request.url} {payload} {response.status_code} {response.content}")
             print("--------------------------")
-            raise StopUser()
+            utils.stopLocustTests()
         else:
             resp = response.content
             json_resp = json.loads(resp)
@@ -235,10 +245,7 @@ class CD_PIPELINE_RUN(SequentialTaskSet):
     def on_start(self):
         self.data_initiator()
         self.authentication()
-
-    @task
-    def setup_data(self):
-        self.orgId = "auto_cd_k8s_org_" + uniqueId
+        self.orgId = "auto_cd_k8s_org_" + uniqueId        
 
     @task
     def trigger_pipeline(self):
