@@ -13,7 +13,7 @@ from locust_tasks.utilities import utils
 from utilities.utils import getPath
 from locust.runners import LocalRunner, MasterRunner, WorkerRunner, STATE_STOPPING, STATE_STOPPED, STATE_CLEANUP
 from locust_tasks.helpers.ng import helpers
-from locust import task, SequentialTaskSet, events
+from locust import task, SequentialTaskSet, events, constant_throughput
 
 
 def checker(environment):
@@ -21,7 +21,7 @@ def checker(environment):
         time.sleep(1)
         if environment.runner.stats.total.fail_ratio > 0.2:
             print(f"fail ratio was {environment.runner.stats.total.fail_ratio}, quitting")
-            environment.runner.quit()
+            utils.stopLocustTests()
             return
 
 def trigger_pipeline(environment, msg, **kwargs):
@@ -41,6 +41,10 @@ def initiator(environment, **kwargs):
     environment.runner.state = "TESTDATA SETUP"
     global auth_mechanism
     auth_mechanism = environment.parsed_options.auth_mechanism
+    global webhookPayload
+    webhookPayload = environment.parsed_options.webook_payload
+    global rps
+    rps = float(environment.parsed_options.rps)
     try:
         testdata_setup = False
         arr = utils.getTestClasses(environment)
@@ -71,6 +75,9 @@ def initiator(environment, **kwargs):
 class TRIGGER_PIPELINE(SequentialTaskSet):
 
     def data_initiator(self):
+        if rps != 0:
+            print(f"Current RPS requested per user : {rps}")
+            self.__class__.wait_time = constant_throughput(rps)
         self.pipeline_comps = pipeline_link.split('/')
 
         if '/api/webhook' not in pipeline_link:
@@ -107,10 +114,6 @@ class TRIGGER_PIPELINE(SequentialTaskSet):
         self.authentication()
 
     @task
-    def createRandomString(self):
-        self.randomString = ''.join(choice(ascii_lowercase) for i in range(3))
-
-    @task
     def triggerPipeline(self):
         global deployment_count
         deployment_count += 1
@@ -120,7 +123,13 @@ class TRIGGER_PIPELINE(SequentialTaskSet):
                                                                    self.orgName,
                                                                    self.moduleName, self.accountId, self.bearerToken)
             else:
-                response = helpers.triggerWithWebHook(self, self.accountId, uniqueId)
+                if '/api/webhook?' in pipeline_link: # support github webhook only
+                    response = helpers.triggerWithWebHook(self, self.accountId, uniqueId)
+                elif '/api/webhook/custom/' in pipeline_link:
+                    response = helpers.triggerWithCustomWebHook(self, pipeline_link, webhookPayload)
+                else:
+                    print("Unsupported webhook url !!")
+                    utils.stopLocustTests()
 
             if response.status_code == 200:
                 print('Pipeline is triggered successfully ')

@@ -30,7 +30,7 @@ def checker(environment):
         time.sleep(1)
         if environment.runner.stats.total.fail_ratio > 0.2:
             print(f"fail ratio was {environment.runner.stats.total.fail_ratio}, quitting")
-            environment.runner.quit()
+            utils.stopLocustTests()
             return
 
 def entities(environment, msg, **kwargs):

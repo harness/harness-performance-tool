@@ -309,6 +309,16 @@ def triggerPipelineWithoutPayloadWithGitExp(self, pipelineName, projectName, org
         print(triggerPipelineResponse.content)
     return triggerPipelineResponse.status_code
 
+def triggerWithCustomWebHook(self, webhookUrl, webhookPayload):
+    headers = {'content-type':'application/json'}
+    triggerWithWebHookResponse = self.client.post(webhookUrl, data=webhookPayload, headers=headers, name='TriggerWebhook')
+    print(f"Webhook Response: {triggerWithWebHookResponse.content}")
+    if triggerWithWebHookResponse.status_code != 200:
+        print(f"requestUrl: {triggerWithWebHookResponse.request.url}")
+        print(f"Webhook Payload: {webhookPayload}")
+        print(f"Webhook Response: {triggerWithWebHookResponse.content}")
+    return triggerWithWebHookResponse
+
 # used in ci_pipeline_remote_run.py
 def triggerWithWebHook(self, accountId, payloadConditionValue):
     headers = {'X-GitHub-Event': 'pull_request', 'content-type':'application/json'}

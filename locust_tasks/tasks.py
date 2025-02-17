@@ -39,8 +39,10 @@ global_task_set = []
 
 @events.init_command_line_parser.add_listener
 def _(parser):
+    parser.add_argument("--rps", type=str, default="1", help="rps per user")
     parser.add_argument("--test-scenario", type=str, default="CI_CREATE_PIPELINE", help="")
     parser.add_argument("--pipeline-url", type=str, default="", help="optional")
+    parser.add_argument("--webook-payload", type=str, default="", help="JSON webhook payload")
     parser.add_argument("--pipeline-execution-count", type=int, default=0, help="optional")
     parser.add_argument("--env", type=str, include_in_web_ui=False, default="on-prem", help="eg: on-prem")
     parser.add_argument("--auth-mechanism", type=str, default="Harness", help="Harness | Local-Login")
