@@ -106,22 +106,32 @@ Locate cacert.pem file via terminal
 ``` 
 Number of users : Total concurrent users [eg: 1]
 
-Spawn rate : Time to spawn all users [eg: 1 (in seconds)]
+Spawn rate : no. of users to start per second
 
 Host : <Harness URL> [eg: http://<ip_address>]
 
 Run time : Test duration [eg: 5m]
 note: Click on Advanced options to view this field
 
+Rps : request per second per user
+eg: Generate 40 requests per 60s with 1 user [ (40 req / 60 sec)/(1 user) = 0.6 ]
+eg: Generate 40 requests per 60s with 5 user [ (40 req / 60 sec)/(5 user) =  0.13 ]
+Note: This is applicable only for test scenarios *_RUN and TRIGGER_PIPELINE
+
 Test scenario : Test class to execute 
 eg: CI_CREATE_PIPELINE,CI_EXECUTE_PIPELINE (single or comma separated class names)
 
-Pipeline url (optional) : Pipeline url to execute ‘n’ times 
+Pipeline url (optional) : Pipeline url (without payload) or Custom Webhook Url to execute ‘n’ times 
 eg: https://<ip_address>/ng/account/EuVfUT4wTfqIYugqfpssQw/all/orgs/default/projects/ScaleTestPOC/pipelines/Test/pipeline-studio?storeType=INLINE  
 
-Pick pipeline link from Harness UI > Select project from left menu > Pipelines > Click on pipeline name
+To pick pipeline url : Navigate to project > Pipelines > Select pipeline from list to view pipeline-studio > Copy pipeline url
 
-Pipeline execution count (optional) : no. of times pipeline should run [eg: 50]
+Webhook payload : JSON payload of webhook request
+eg: {"key": "inputSetId"}
+Blank if there is no payload to be sent with webhook
+Note: This is applicable only for test scenario TRIGGER_PIPELINE
+
+Pipeline execution count (optional) : no. of times pipeline or webhook should run [eg: 50]
 
 Auth mechanism : 
 1. Harness : If username/password authentication is confiugured on account (default)
